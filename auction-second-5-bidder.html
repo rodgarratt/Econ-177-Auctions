@@ -1058,7 +1058,7 @@
     ctx.font      = '11px "DM Mono", monospace';
     ctx.textAlign = 'left';
     rows.forEach((row, i) => {
-      const cy = pad.top + ph - 14 - (rows.length - 1 - i) * rowH;
+      const cy = pad.top + 14 + i * rowH;
       // Draw swatch line centered vertically on text
       ctx.save();
       ctx.strokeStyle = row.color;
