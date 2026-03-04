@@ -270,16 +270,16 @@
   }
   table { width: 100%; border-collapse: collapse; }
   thead th {
-    padding: 12px 18px; text-align: left; font-size: 10px;
-    letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted);
-    border-bottom: 1px solid var(--border);
+    padding: 10px 14px; text-align: left; font-size: 10px;
+    letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted);
+    border-bottom: 1px solid var(--border); white-space: nowrap;
   }
   tbody tr { border-bottom: 1px solid rgba(42,42,42,0.5); transition: background 0.15s; }
   tbody tr:last-child { border-bottom: none; }
   tbody tr:hover { background: rgba(255,255,255,0.02); }
   tbody tr.winner td { color: var(--gold); }
   tbody tr.winner .col-id::before { content: '★ '; }
-  td { padding: 13px 18px; font-size: 13px; }
+  td { padding: 11px 14px; font-size: 13px; }
   .col-pv   { color: var(--muted) !important; }
   .col-amt  { font-weight: 500; }
   .col-num  { color: var(--muted); font-size: 11px; }
@@ -1046,31 +1046,31 @@
     ctx.restore();
 
     // ── Legend ──
-    const legendX = pad.left + pw - 5;
-    const legendY = pad.top + 8;
-    ctx.font      = '10px "DM Mono", monospace';
-    ctx.textAlign = 'right';
-    // Theory
+    const lgX = pad.left + 8;
+    const lgY = pad.top + ph - 36;
+    ctx.font      = '11px "DM Mono", monospace';
+    ctx.textAlign = 'left';
+    // Optimal bid line swatch
     ctx.save();
     ctx.strokeStyle = C.theory;
     ctx.lineWidth   = 1.5;
-    ctx.setLineDash([4, 3]);
+    ctx.setLineDash([5, 3]);
     ctx.beginPath();
-    ctx.moveTo(legendX - 60, legendY + 4);
-    ctx.lineTo(legendX - 40, legendY + 4);
+    ctx.moveTo(lgX, lgY + 5);
+    ctx.lineTo(lgX + 22, lgY + 5);
     ctx.stroke();
     ctx.restore();
     ctx.fillStyle = C.label;
-    ctx.fillText('Optimal Bid', legendX, legendY + 8);
-    // Trend
+    ctx.fillText('Optimal Bid (Nash Equilibrium)', lgX + 28, lgY + 9);
+    // OLS trend line swatch
     ctx.strokeStyle = C.line;
     ctx.lineWidth   = 2;
     ctx.beginPath();
-    ctx.moveTo(legendX - 60, legendY + 18);
-    ctx.lineTo(legendX - 40, legendY + 18);
+    ctx.moveTo(lgX, lgY + 21);
+    ctx.lineTo(lgX + 22, lgY + 21);
     ctx.stroke();
     ctx.fillStyle = C.label;
-    ctx.fillText('Trend line', legendX, legendY + 22);
+    ctx.fillText('OLS Trend Line (Actual Bids)', lgX + 28, lgY + 25);
   }
 
   // ── Enter key
