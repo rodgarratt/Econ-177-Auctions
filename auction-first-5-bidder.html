@@ -1046,31 +1046,33 @@
     ctx.restore();
 
     // ── Legend ──
-    const lgX = pad.left + 8;
-    const lgY = pad.top + ph - 36;
+    // Draw each row as: [swatch gap] [label] on separate lines with enough vertical spacing
+    const lgX    = pad.left + 10;
+    const swatchW = 24;
+    const gap     = 10;
+    const rowH    = 22;
+    const rows = [
+      { label: 'Optimal Bid (Nash Equilibrium)', color: C.theory, dash: [5, 3], width: 1.5 },
+      { label: 'OLS Trend Line (Actual Bids)',   color: C.line,   dash: [],     width: 2   },
+    ];
     ctx.font      = '11px "DM Mono", monospace';
     ctx.textAlign = 'left';
-    // Optimal bid line swatch
-    ctx.save();
-    ctx.strokeStyle = C.theory;
-    ctx.lineWidth   = 1.5;
-    ctx.setLineDash([5, 3]);
-    ctx.beginPath();
-    ctx.moveTo(lgX, lgY + 5);
-    ctx.lineTo(lgX + 22, lgY + 5);
-    ctx.stroke();
-    ctx.restore();
-    ctx.fillStyle = C.label;
-    ctx.fillText('Optimal Bid (Nash Equilibrium)', lgX + 28, lgY + 9);
-    // OLS trend line swatch
-    ctx.strokeStyle = C.line;
-    ctx.lineWidth   = 2;
-    ctx.beginPath();
-    ctx.moveTo(lgX, lgY + 21);
-    ctx.lineTo(lgX + 22, lgY + 21);
-    ctx.stroke();
-    ctx.fillStyle = C.label;
-    ctx.fillText('OLS Trend Line (Actual Bids)', lgX + 28, lgY + 25);
+    rows.forEach((row, i) => {
+      const cy = pad.top + ph - 14 - (rows.length - 1 - i) * rowH;
+      // Draw swatch line centered vertically on text
+      ctx.save();
+      ctx.strokeStyle = row.color;
+      ctx.lineWidth   = row.width;
+      ctx.setLineDash(row.dash);
+      ctx.beginPath();
+      ctx.moveTo(lgX, cy - 1);
+      ctx.lineTo(lgX + swatchW, cy - 1);
+      ctx.stroke();
+      ctx.restore();
+      // Draw label to the right of swatch, baseline aligned
+      ctx.fillStyle = '#888480';
+      ctx.fillText(row.label, lgX + swatchW + gap, cy + 4);
+    });
   }
 
   // ── Enter key
