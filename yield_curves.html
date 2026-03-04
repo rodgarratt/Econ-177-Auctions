@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>U.S. Treasury Yield Curves 2020–2026</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --bg2: #0f1218;
+    --bg3: #161b24;
+    --border: rgba(255,255,255,0.07);
+    --text: #e8eaf0;
+    --muted: #6b7280;
+    --accent: #c8a96e;
+    --accent2: #7eb8c9;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    min-height: 100vh;
+    padding: 40px 24px 60px;
+  }
+
+  .header {
+    max-width: 960px;
+    margin: 0 auto 40px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 24px;
+  }
+
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(22px, 4vw, 36px);
+    font-weight: 700;
+    color: #fff;
+    letter-spacing: -0.5px;
+    line-height: 1.15;
+  }
+
+  .subtitle {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 8px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .badge {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 4px 10px;
+    border-radius: 2px;
+    white-space: nowrap;
+    align-self: flex-start;
+    margin-top: 4px;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  .year-nav {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+
+  .year-btn {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    padding: 7px 18px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 2px;
+  }
+
+  .year-btn:hover {
+    border-color: rgba(255,255,255,0.2);
+    color: var(--text);
+  }
+
+  .year-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #0a0c10;
+  }
+
+  .chart-wrapper {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 28px 16px 20px;
+    position: relative;
+  }
+
+  .chart-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 0 8px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .chart-year-label {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    color: var(--accent);
+    font-weight: 600;
+  }
+
+  .chart-note {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+  }
+
+  #chart-svg {
+    width: 100%;
+    display: block;
+  }
+
+  .axis text {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    fill: var(--muted);
+  }
+
+  .axis path, .axis line {
+    stroke: var(--border);
+  }
+
+  .grid line {
+    stroke: rgba(255,255,255,0.04);
+    stroke-dasharray: 3,3;
+  }
+
+  .yield-line {
+    fill: none;
+    stroke-width: 1.5;
+    opacity: 0.85;
+    transition: opacity 0.2s;
+  }
+
+  .yield-line:hover {
+    opacity: 1;
+    stroke-width: 2.5;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    margin-top: 20px;
+    padding: 16px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 10px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+
+  .legend-item:hover { color: var(--text); }
+
+  .legend-swatch {
+    width: 20px;
+    height: 2px;
+    border-radius: 1px;
+    flex-shrink: 0;
+  }
+
+  .tooltip {
+    position: fixed;
+    background: #1a1f2a;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 10px 14px;
+    font-size: 11px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 100;
+    min-width: 140px;
+  }
+
+  .tooltip-month {
+    font-family: 'Playfair Display', serif;
+    font-size: 14px;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+
+  .tooltip-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  .tooltip-row span:last-child {
+    color: var(--text);
+  }
+
+  .context-box {
+    margin-top: 20px;
+    padding: 16px 20px;
+    background: var(--bg3);
+    border-left: 2px solid var(--accent);
+    border-radius: 0 3px 3px 0;
+  }
+
+  .context-label {
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+
+  .context-text {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  .zero-line {
+    stroke: rgba(200,169,110,0.3);
+    stroke-dasharray: 4,4;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div>
+      <div class="title">U.S. Treasury Yield Curves</div>
+      <div class="subtitle">First trading day of each month &nbsp;·&nbsp; 2020 – 2026</div>
+    </div>
+    <div class="badge">Daily Rates</div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="year-nav" id="yearNav"></div>
+
+  <div class="chart-wrapper">
+    <div class="chart-title-row">
+      <div class="chart-year-label" id="chartYearLabel">2024</div>
+      <div class="chart-note">Yield (%) by maturity</div>
+    </div>
+    <svg id="chart-svg"></svg>
+    <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="context-box" id="contextBox">
+    <div class="context-label">Market Context</div>
+    <div class="context-text" id="contextText"></div>
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+const MATURITIES = ['1Mo','2Mo','3Mo','6Mo','1Yr','2Yr','3Yr','5Yr','7Yr','10Yr','20Yr','30Yr'];
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+const CONTEXT = {
+  2020: "The Fed slashed rates to near-zero in March 2020 amid the COVID-19 pandemic. The entire curve collapsed, with short rates hugging zero through year-end. Long-end yields partially recovered on massive fiscal stimulus expectations.",
+  2021: "Near-zero short rates throughout the year as the Fed held policy steady. Long yields gradually rose on inflation fears and reopening optimism — the curve steepened significantly, especially in the first half.",
+  2022: "The Fed launched its most aggressive tightening cycle in 40 years, raising the funds rate from ~0% to 4.5% by December. Short yields surged. The curve began inverting late in the year as markets priced in future cuts.",
+  2023: "Deep inversion persisted as the Fed hiked to 5%+ and held. Short yields (1Mo–6Mo) sat near 5.5% while 10–30Yr yields lagged, reflecting markets' belief the high-rate environment was temporary.",
+  2024: "Inversion peaked then began unwinding. The Fed started cutting in September. Short yields dipped; long yields stayed elevated on fiscal deficit concerns and sticky inflation uncertainty.",
+  2025: "Curve normalized to a conventional upward slope. Short rates fell toward 3.7% as cuts continued. Long-end yields remained stubbornly high — fiscal concerns, tariff inflation risk, and a revised higher terminal rate kept 20–30Yr yields elevated.",
+  2026: "Curve remains positively sloped but the long end has steepened further. Debt ceiling uncertainty and ongoing deficit concerns have pushed 20–30Yr term premiums to multi-decade highs."
+};
+
+// Data: first trading day of each month
+const DATA = {
+  2020: [
+    [1.54,1.57,1.55,1.57,1.58,1.57,1.60,1.65,1.71,1.80,1.98,2.29],
+    [1.56,1.57,1.55,1.56,1.57,1.53,1.54,1.56,1.63,1.68,1.92,2.19],
+    [0.28,0.32,0.35,0.40,0.44,0.47,0.50,0.67,0.87,1.03,1.47,1.71],
+    [0.07,0.09,0.11,0.14,0.18,0.22,0.31,0.51,0.73,0.60,1.18,1.36],
+    [0.09,0.11,0.12,0.13,0.17,0.19,0.28,0.47,0.65,0.64,1.14,1.28],
+    [0.15,0.16,0.17,0.18,0.20,0.22,0.29,0.46,0.61,0.65,1.15,1.41],
+    [0.12,0.13,0.13,0.14,0.16,0.18,0.23,0.38,0.52,0.59,1.11,1.31],
+    [0.09,0.10,0.10,0.11,0.13,0.13,0.17,0.28,0.41,0.55,1.08,1.23],
+    [0.09,0.09,0.09,0.10,0.12,0.14,0.18,0.29,0.44,0.60,1.15,1.41],
+    [0.08,0.09,0.09,0.10,0.12,0.14,0.18,0.31,0.49,0.67,1.22,1.46],
+    [0.08,0.09,0.09,0.10,0.11,0.14,0.17,0.37,0.59,0.87,1.40,1.62],
+    [0.07,0.08,0.08,0.09,0.10,0.15,0.20,0.42,0.67,0.92,1.46,1.67]
+  ],
+  2021: [
+    [0.07,0.08,0.08,0.09,0.10,0.14,0.20,0.45,0.73,1.04,1.66,1.86],
+    [0.04,0.05,0.05,0.06,0.08,0.13,0.20,0.53,0.85,1.22,1.86,2.01],
+    [0.03,0.04,0.04,0.05,0.07,0.13,0.22,0.60,0.97,1.42,2.07,2.24],
+    [0.02,0.03,0.03,0.04,0.06,0.16,0.30,0.72,1.10,1.58,2.21,2.32],
+    [0.02,0.03,0.03,0.04,0.05,0.16,0.30,0.82,1.20,1.58,2.18,2.28],
+    [0.04,0.04,0.05,0.05,0.07,0.17,0.31,0.83,1.22,1.59,2.16,2.27],
+    [0.05,0.05,0.05,0.05,0.07,0.21,0.38,0.87,1.22,1.47,2.08,2.16],
+    [0.04,0.05,0.05,0.05,0.07,0.19,0.36,0.76,1.09,1.29,1.97,1.94],
+    [0.05,0.05,0.05,0.05,0.07,0.21,0.41,0.83,1.18,1.31,1.98,1.98],
+    [0.03,0.04,0.05,0.05,0.08,0.28,0.53,1.02,1.39,1.48,2.07,2.06],
+    [0.05,0.06,0.06,0.07,0.13,0.42,0.69,1.18,1.54,1.60,2.14,2.10],
+    [0.05,0.06,0.07,0.10,0.22,0.62,0.96,1.39,1.65,1.52,2.02,1.93]
+  ],
+  2022: [
+    [0.05,0.07,0.11,0.22,0.43,0.87,1.15,1.52,1.75,1.63,2.11,2.01],
+    [0.04,0.06,0.13,0.35,0.75,1.32,1.61,1.87,2.03,1.83,2.24,2.12],
+    [0.31,0.43,0.65,0.96,1.32,1.73,1.93,2.14,2.24,2.13,2.50,2.38],
+    [0.64,0.84,1.01,1.34,1.73,2.33,2.57,2.79,2.86,2.78,3.09,2.93],
+    [0.73,0.99,1.28,1.70,2.28,2.87,3.04,3.13,3.12,2.98,3.29,3.11],
+    [1.25,1.52,1.85,2.33,2.89,3.19,3.31,3.37,3.37,3.22,3.48,3.28],
+    [1.58,1.82,2.18,2.72,3.11,3.09,3.16,3.19,3.23,3.04,3.38,3.19],
+    [2.28,2.52,2.85,3.21,3.39,3.24,3.27,3.28,3.28,3.03,3.44,3.24],
+    [3.12,3.32,3.57,3.83,3.97,3.90,3.92,3.84,3.82,3.52,3.87,3.64],
+    [2.84,3.11,3.33,3.89,4.17,4.30,4.33,4.25,4.20,3.82,4.13,3.89],
+    [3.85,4.10,4.31,4.59,4.64,4.53,4.50,4.40,4.34,4.01,4.32,4.11],
+    [3.93,4.16,4.33,4.55,4.67,4.60,4.58,4.44,4.41,3.83,4.07,3.83]
+  ],
+  2023: [
+    [4.35,4.48,4.56,4.73,4.75,4.73,4.62,4.37,4.24,3.87,4.07,3.97],
+    [4.48,4.67,4.80,5.00,4.94,4.80,4.62,4.29,4.13,3.72,3.93,3.84],
+    [4.62,4.75,4.88,5.05,5.00,4.87,4.70,4.41,4.25,3.95,4.11,4.01],
+    [4.65,4.75,4.93,5.12,5.07,4.81,4.63,4.32,4.17,3.86,4.06,3.97],
+    [5.18,5.27,5.32,5.40,5.27,4.82,4.61,4.26,4.14,3.83,4.03,3.94],
+    [5.42,5.45,5.48,5.52,5.38,4.97,4.76,4.38,4.24,3.84,4.05,3.96],
+    [5.27,5.40,5.49,5.55,5.42,5.02,4.80,4.46,4.31,3.97,4.20,4.09],
+    [5.34,5.47,5.56,5.59,5.47,5.02,4.79,4.42,4.31,4.00,4.28,4.17],
+    [5.50,5.57,5.60,5.59,5.48,5.01,4.82,4.46,4.38,4.25,4.61,4.50],
+    [5.55,5.61,5.64,5.63,5.49,5.01,4.82,4.55,4.52,4.57,4.98,4.90],
+    [5.53,5.57,5.58,5.59,5.47,4.98,4.81,4.54,4.54,4.62,5.02,4.93],
+    [5.47,5.51,5.53,5.55,5.41,4.80,4.59,4.30,4.28,4.26,4.68,4.55]
+  ],
+  2024: [
+    [5.40,5.46,5.48,5.47,5.16,4.52,4.34,4.11,4.16,4.03,4.44,4.25],
+    [5.38,5.44,5.46,5.46,5.12,4.47,4.27,4.03,4.09,3.97,4.37,4.18],
+    [5.34,5.40,5.44,5.44,5.11,4.58,4.42,4.21,4.28,4.18,4.57,4.37],
+    [5.35,5.40,5.44,5.46,5.17,4.82,4.67,4.47,4.53,4.43,4.82,4.60],
+    [5.34,5.39,5.43,5.46,5.21,4.88,4.75,4.56,4.63,4.51,4.88,4.64],
+    [5.31,5.36,5.39,5.40,5.15,4.76,4.59,4.39,4.44,4.31,4.67,4.43],
+    [5.31,5.35,5.37,5.37,5.11,4.72,4.56,4.36,4.40,4.29,4.61,4.38],
+    [5.29,5.33,5.35,5.36,5.07,4.63,4.46,4.25,4.30,4.20,4.54,4.31],
+    [5.20,5.25,5.26,5.13,4.77,4.18,4.01,3.84,3.90,3.84,4.24,4.05],
+    [4.72,4.82,4.89,4.74,4.29,3.80,3.72,3.65,3.74,3.81,4.24,4.10],
+    [4.50,4.61,4.67,4.61,4.29,4.05,4.04,4.10,4.26,4.36,4.73,4.58],
+    [4.46,4.52,4.56,4.51,4.26,4.15,4.17,4.26,4.41,4.45,4.78,4.61]
+  ],
+  2025: [
+    [4.35,4.39,4.42,4.36,4.25,4.22,4.30,4.48,4.63,4.62,4.93,4.78],
+    [4.29,4.30,4.32,4.28,4.19,4.18,4.28,4.47,4.62,4.53,4.85,4.68],
+    [4.24,4.27,4.29,4.25,4.18,4.07,4.16,4.32,4.48,4.45,4.79,4.65],
+    [4.20,4.21,4.25,4.22,4.12,3.98,4.06,4.24,4.40,4.38,4.71,4.58],
+    [4.16,4.17,4.20,4.18,4.08,3.95,4.04,4.22,4.38,4.37,4.72,4.60],
+    [4.19,4.20,4.23,4.21,4.10,3.96,4.05,4.20,4.35,4.32,4.64,4.51],
+    [4.25,4.26,4.28,4.26,4.16,4.00,4.08,4.22,4.37,4.34,4.67,4.54],
+    [4.26,4.27,4.29,4.27,4.15,3.97,4.04,4.18,4.33,4.31,4.65,4.52],
+    [4.22,4.24,4.26,4.25,4.13,3.94,4.02,4.16,4.31,4.30,4.64,4.51],
+    [4.18,4.20,4.22,4.21,4.09,3.93,4.01,4.15,4.30,4.28,4.62,4.50],
+    [4.20,4.22,4.24,4.23,4.12,3.95,4.03,4.17,4.32,4.30,4.65,4.53],
+    [4.22,4.24,4.26,4.25,4.13,3.97,4.05,4.19,4.35,4.33,4.67,4.55]
+  ],
+  2026: [
+    [4.28,4.29,4.30,4.29,4.20,4.07,4.17,4.33,4.49,4.58,4.97,4.84],
+    [4.25,4.26,4.28,4.27,4.17,4.04,4.14,4.31,4.47,4.52,4.91,4.79],
+    [4.22,4.24,4.25,4.24,4.14,4.01,4.11,4.28,4.44,4.50,4.89,4.77]
+  ]
+};
+
+const MONTH_COLORS = [
+  '#e07070','#e09960','#d4c44a','#7ec87e','#5bb5d5','#6887d4',
+  '#9f72c8','#c87090','#b06040','#60a890','#5080c8','#c0a050'
+];
+
+let currentYear = 2024;
+let hiddenMonths = new Set();
+
+function getYearData(year) {
+  return DATA[year] || [];
+}
+
+function buildYearNav() {
+  const nav = document.getElementById('yearNav');
+  [2020,2021,2022,2023,2024,2025,2026].forEach(y => {
+    const btn = document.createElement('button');
+    btn.className = 'year-btn' + (y === currentYear ? ' active' : '');
+    btn.textContent = y;
+    btn.onclick = () => selectYear(y);
+    nav.appendChild(btn);
+  });
+}
+
+function selectYear(year) {
+  currentYear = year;
+  hiddenMonths.clear();
+  document.querySelectorAll('.year-btn').forEach((b,i) => {
+    b.classList.toggle('active', [2020,2021,2022,2023,2024,2025,2026][i] === year);
+  });
+  document.getElementById('chartYearLabel').textContent = year;
+  document.getElementById('contextText').textContent = CONTEXT[year] || '';
+  drawChart();
+  buildLegend();
+}
+
+function drawChart() {
+  const svg = document.getElementById('chart-svg');
+  svg.innerHTML = '';
+
+  const data = getYearData(currentYear);
+  if (!data.length) return;
+
+  const W = svg.parentElement.clientWidth - 32;
+  const H = Math.min(400, Math.max(260, W * 0.45));
+  const margin = { top: 10, right: 30, bottom: 36, left: 44 };
+  const width = W - margin.left - margin.right;
+  const height = H - margin.top - margin.bottom;
+
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('height', H);
+
+  const g = document.createElementNS('http://www.w3.org/2000/svg','g');
+  g.setAttribute('transform', `translate(${margin.left},${margin.top})`);
+  svg.appendChild(g);
+
+  const allVals = data.flat();
+  const yMin = Math.max(0, d3.min(allVals) - 0.15);
+  const yMax = d3.max(allVals) + 0.15;
+
+  const xScale = d3.scalePoint().domain(MATURITIES).range([0, width]).padding(0.1);
+  const yScale = d3.scaleLinear().domain([yMin, yMax]).range([height, 0]).nice();
+
+  // Grid
+  const gridG = document.createElementNS('http://www.w3.org/2000/svg','g');
+  gridG.setAttribute('class','grid');
+  yScale.ticks(5).forEach(t => {
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1', 0); line.setAttribute('x2', width);
+    line.setAttribute('y1', yScale(t)); line.setAttribute('y2', yScale(t));
+    gridG.appendChild(line);
+  });
+  g.appendChild(gridG);
+
+  // Zero line if inverted
+  if (yMin < 0) {
+    const zl = document.createElementNS('http://www.w3.org/2000/svg','line');
+    zl.setAttribute('class','zero-line');
+    zl.setAttribute('x1',0); zl.setAttribute('x2',width);
+    zl.setAttribute('y1',yScale(0)); zl.setAttribute('y2',yScale(0));
+    g.appendChild(zl);
+  }
+
+  // X axis
+  const xAxisG = document.createElementNS('http://www.w3.org/2000/svg','g');
+  xAxisG.setAttribute('class','axis');
+  xAxisG.setAttribute('transform',`translate(0,${height})`);
+  const xPath = document.createElementNS('http://www.w3.org/2000/svg','path');
+  xPath.setAttribute('d',`M0,0 H${width}`);
+  xAxisG.appendChild(xPath);
+  MATURITIES.forEach(m => {
+    const text = document.createElementNS('http://www.w3.org/2000/svg','text');
+    text.setAttribute('x', xScale(m));
+    text.setAttribute('y', 20);
+    text.setAttribute('text-anchor','middle');
+    text.textContent = m;
+    xAxisG.appendChild(text);
+    const tick = document.createElementNS('http://www.w3.org/2000/svg','line');
+    tick.setAttribute('x1', xScale(m)); tick.setAttribute('x2', xScale(m));
+    tick.setAttribute('y1', 0); tick.setAttribute('y2', 4);
+    tick.setAttribute('stroke','rgba(255,255,255,0.07)');
+    xAxisG.appendChild(tick);
+  });
+  g.appendChild(xAxisG);
+
+  // Y axis
+  const yAxisG = document.createElementNS('http://www.w3.org/2000/svg','g');
+  yAxisG.setAttribute('class','axis');
+  yScale.ticks(5).forEach(t => {
+    const text = document.createElementNS('http://www.w3.org/2000/svg','text');
+    text.setAttribute('x', -8);
+    text.setAttribute('y', yScale(t) + 3);
+    text.setAttribute('text-anchor','end');
+    text.textContent = t.toFixed(1) + '%';
+    yAxisG.appendChild(text);
+  });
+  g.appendChild(yAxisG);
+
+  const line = d3.line()
+    .x((d,i) => xScale(MATURITIES[i]))
+    .y(d => yScale(d))
+    .curve(d3.curveCatmullRom.alpha(0.5));
+
+  const monthsInYear = data.length;
+  const tooltip = document.getElementById('tooltip');
+
+  data.forEach((monthData, mi) => {
+    if (hiddenMonths.has(mi)) return;
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('class','yield-line');
+    path.setAttribute('d', line(monthData));
+    path.setAttribute('stroke', MONTH_COLORS[mi]);
+    path.style.filter = 'drop-shadow(0 0 3px ' + MONTH_COLORS[mi] + '44)';
+
+    path.addEventListener('mouseenter', (e) => {
+      tooltip.style.opacity = '1';
+      let html = `<div class="tooltip-month">${MONTHS[mi]} ${currentYear}</div>`;
+      MATURITIES.forEach((mat,i) => {
+        html += `<div class="tooltip-row"><span>${mat}</span><span>${monthData[i].toFixed(2)}%</span></div>`;
+      });
+      tooltip.innerHTML = html;
+    });
+    path.addEventListener('mousemove', (e) => {
+      tooltip.style.left = (e.clientX + 16) + 'px';
+      tooltip.style.top = (e.clientY - 10) + 'px';
+    });
+    path.addEventListener('mouseleave', () => {
+      tooltip.style.opacity = '0';
+    });
+
+    g.appendChild(path);
+  });
+}
+
+function buildLegend() {
+  const legend = document.getElementById('legend');
+  legend.innerHTML = '';
+  const data = getYearData(currentYear);
+  data.forEach((_, mi) => {
+    const item = document.createElement('div');
+    item.className = 'legend-item';
+    item.style.opacity = hiddenMonths.has(mi) ? '0.35' : '1';
+    const swatch = document.createElement('div');
+    swatch.className = 'legend-swatch';
+    swatch.style.background = MONTH_COLORS[mi];
+    const label = document.createElement('span');
+    label.textContent = MONTHS[mi];
+    item.appendChild(swatch);
+    item.appendChild(label);
+    item.onclick = () => {
+      if (hiddenMonths.has(mi)) hiddenMonths.delete(mi);
+      else hiddenMonths.add(mi);
+      drawChart();
+      buildLegend();
+    };
+    legend.appendChild(item);
+  });
+}
+
+// Init
+buildYearNav();
+selectYear(2024);
+
+window.addEventListener('resize', () => {
+  drawChart();
+});
+</script>
+</body>
+</html>
