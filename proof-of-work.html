@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Proof of Work Challenge</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100vh;
+      background: #0a0a0f;
+      background-image:
+        radial-gradient(ellipse at 20% 50%, #0d1f3c 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, #1a0d2e 0%, transparent 50%);
+      font-family: 'Courier New', monospace;
+      color: #c8d0e0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .header .subtitle {
+      font-size: 11px;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      color: #4a9eff;
+      margin-bottom: 12px;
+      opacity: 0.8;
+    }
+
+    .header h1 {
+      font-size: clamp(28px, 5vw, 52px);
+      font-weight: 900;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, #e0eaff 0%, #4a9eff 50%, #00ff9f 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.1;
+    }
+
+    .header p {
+      margin-top: 14px;
+      color: #6070a0;
+      font-size: 14px;
+      max-width: 480px;
+      line-height: 1.7;
+    }
+
+    .header p strong { color: #00ff9f; }
+
+    .container {
+      width: 100%;
+      max-width: 680px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Target bar */
+    .target-bar {
+      background: linear-gradient(135deg, #0d1a2e, #0a1520);
+      border: 1px solid #1e3a5f;
+      border-radius: 12px;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .target-bar .label {
+      font-size: 10px;
+      letter-spacing: 3px;
+      color: #4a9eff;
+      text-transform: uppercase;
+    }
+
+    .target-pattern {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      margin-top: 4px;
+    }
+
+    .target-pattern .zeros { color: #00ff9f; }
+    .target-pattern .rest  { color: #2a3a5f; }
+
+    .attempts-count {
+      font-size: 28px;
+      font-weight: 900;
+      color: #e0eaff;
+    }
+
+    /* Input card */
+    .input-card {
+      background: #0d1220;
+      border: 1px solid #1a2840;
+      border-radius: 16px;
+      padding: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .field-label {
+      display: block;
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #4a9eff;
+      margin-bottom: 8px;
+    }
+
+    .field-label.nonce-label { color: #00ff9f; }
+    .field-label .hint {
+      color: #3a5a40;
+      font-size: 9px;
+      letter-spacing: 1px;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      background: #070c18;
+      border: 1px solid #1a2840;
+      border-radius: 8px;
+      padding: 12px 16px;
+      color: #c8d0e0;
+      font-size: 14px;
+      font-family: 'Courier New', monospace;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus { border-color: #4a9eff; }
+
+    #nonce {
+      color: #00ff9f;
+      background: #07110f;
+      border-color: #1a4030;
+    }
+
+    #nonce:focus { border-color: #00ff9f; }
+
+    .nonce-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .nonce-row input { flex: 1; }
+
+    .btn-random {
+      background: transparent;
+      border: 1px solid #1a4030;
+      border-radius: 8px;
+      padding: 0 16px;
+      color: #00cc7a;
+      font-size: 11px;
+      font-family: 'Courier New', monospace;
+      cursor: pointer;
+      letter-spacing: 1px;
+      white-space: nowrap;
+      transition: border-color 0.2s, color 0.2s;
+    }
+
+    .btn-random:hover { border-color: #00ff9f; color: #00ff9f; }
+
+    .btn-hash {
+      background: linear-gradient(135deg, #1a3a6e, #0d2a5e);
+      border: 1px solid #4a9eff;
+      border-radius: 10px;
+      padding: 16px;
+      color: #4a9eff;
+      font-size: 12px;
+      font-weight: 700;
+      font-family: 'Courier New', monospace;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: 100%;
+    }
+
+    .btn-hash:hover:not(:disabled) {
+      background: linear-gradient(135deg, #1e4a8e, #102e6e);
+      box-shadow: 0 0 20px #4a9eff33;
+    }
+
+    .btn-hash:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Output card */
+    .output-card {
+      background: #0d1220;
+      border: 1px solid #cc3344;
+      border-radius: 16px;
+      padding: 28px;
+      display: none;
+    }
+
+    .output-card.success {
+      background: linear-gradient(135deg, #071a0f, #0a2015);
+      border-color: #00ff9f;
+    }
+
+    .output-card.shake {
+      animation: shake 0.5s ease-in-out;
+    }
+
+    .output-card.glow {
+      animation: glow-pulse 1s ease-in-out;
+    }
+
+    @keyframes shake {
+      0%,100%{transform:translateX(0)}
+      20%{transform:translateX(-8px)}
+      40%{transform:translateX(8px)}
+      60%{transform:translateX(-5px)}
+      80%{transform:translateX(5px)}
+    }
+
+    @keyframes glow-pulse {
+      0%{box-shadow:0 0 0 0 #00ff9f44}
+      50%{box-shadow:0 0 30px 10px #00ff9f22}
+      100%{box-shadow:0 0 0 0 #00ff9f00}
+    }
+
+    .output-status {
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #cc4455;
+      margin-bottom: 12px;
+    }
+
+    .output-card.success .output-status { color: #00ff9f; }
+
+    .hash-display {
+      font-size: 12px;
+      word-break: break-all;
+      line-height: 1.8;
+      letter-spacing: 1px;
+      padding: 16px;
+      background: #060a12;
+      border-radius: 8px;
+      border: 1px solid #0f1a2e;
+    }
+
+    .hash-zeros { color: #00ff9f; font-weight: 800; text-shadow: 0 0 12px #00ff9f88; }
+    .hash-rest  { color: #aab; }
+
+    .output-meta {
+      display: flex;
+      gap: 24px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    .meta-label {
+      font-size: 9px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #506080;
+    }
+
+    .meta-zeros {
+      font-size: 24px;
+      font-weight: 900;
+      color: #cc4455;
+    }
+
+    .meta-zeros.good { color: #00ff9f; }
+    .meta-zeros span { font-size: 12px; color: #506080; }
+
+    .meta-input {
+      font-size: 11px;
+      color: #8090b0;
+      margin-top: 4px;
+      word-break: break-all;
+    }
+
+    .success-msg {
+      margin-top: 20px;
+      padding: 16px;
+      background: #071a0f;
+      border-radius: 10px;
+      border: 1px solid #1a5030;
+      font-size: 13px;
+      line-height: 1.7;
+      color: #80c090;
+      display: none;
+    }
+
+    .success-msg strong { color: #00ff9f; }
+    .success-msg code {
+      background: #0a2010;
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #00ff9f;
+    }
+
+    /* History */
+    .history-card {
+      background: #0d1220;
+      border: 1px solid #1a2840;
+      border-radius: 16px;
+      padding: 24px;
+      display: none;
+    }
+
+    .section-label {
+      font-size: 10px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #4a9eff;
+      margin-bottom: 16px;
+    }
+
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .history-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      background: #070c18;
+      border-radius: 8px;
+      border: 1px solid #1a1a2e;
+      font-size: 11px;
+    }
+
+    .history-item.won { border-color: #1a4030; }
+
+    .history-icon { width: 14px; }
+    .history-icon.ok { color: #00ff9f; }
+    .history-icon.fail { color: #cc4455; }
+
+    .history-nonce { color: #506080; min-width: 80px; }
+    .history-nonce span { color: #00cc7a; }
+
+    .history-hash {
+      color: #303858;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .history-zeros { min-width: 50px; text-align: right; color: #506080; }
+    .history-zeros.good { color: #00ff9f; }
+
+    /* Explainer */
+    .explainer {
+      background: #0a0f1a;
+      border: 1px solid #141e30;
+      border-radius: 16px;
+      padding: 24px;
+      font-size: 13px;
+      line-height: 1.8;
+      color: #5a6880;
+    }
+
+    .explainer p + p { margin-top: 10px; }
+    .explainer strong { color: #7a90b0; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div class="subtitle">Blockchain Fundamentals Lab</div>
+    <h1>Proof of Work Challenge</h1>
+    <p>Mine a valid hash by finding a nonce that produces <strong>3 leading zeros</strong>. This is how Bitcoin secures its blockchain.</p>
+  </div>
+
+  <div class="container">
+
+    <!-- Target bar -->
+    <div class="target-bar">
+      <div>
+        <div class="label">Target Pattern</div>
+        <div class="target-pattern">
+          <span class="zeros">000</span><span class="rest">xxxxx...</span>
+        </div>
+      </div>
+      <div style="text-align:right">
+        <div class="label">Attempts</div>
+        <div class="attempts-count" id="attempts">0</div>
+      </div>
+    </div>
+
+    <!-- Input card -->
+    <div class="input-card">
+      <div>
+        <label class="field-label" for="name">Your Name</label>
+        <input type="text" id="name" placeholder="e.g. Alice" />
+      </div>
+      <div>
+        <label class="field-label" for="transaction">Transaction Data</label>
+        <input type="text" id="transaction" placeholder="e.g. Alice pays Bob 5 BTC" />
+      </div>
+      <div>
+        <label class="field-label nonce-label" for="nonce">
+          Nonce <span class="hint">— this is what you change to find a valid hash</span>
+        </label>
+        <div class="nonce-row">
+          <input type="text" id="nonce" placeholder="Try: 42, abc, hello123..." />
+          <button class="btn-random" id="randomBtn">⚄ Random</button>
+        </div>
+      </div>
+      <button class="btn-hash" id="hashBtn" disabled>⬡ &nbsp; Compute SHA-256 Hash</button>
+    </div>
+
+    <!-- Output card -->
+    <div class="output-card" id="outputCard">
+      <div class="output-status" id="outputStatus"></div>
+      <div class="hash-display" id="hashDisplay"></div>
+      <div class="output-meta">
+        <div>
+          <div class="meta-label">Leading Zeros</div>
+          <div class="meta-zeros" id="zerosCount">0 <span>/ 3 needed</span></div>
+        </div>
+        <div>
+          <div class="meta-label">Input String</div>
+          <div class="meta-input" id="inputString"></div>
+        </div>
+      </div>
+      <div class="success-msg" id="successMsg"></div>
+    </div>
+
+    <!-- History -->
+    <div class="history-card" id="historyCard">
+      <div class="section-label">Recent Attempts</div>
+      <div class="history-list" id="historyList"></div>
+    </div>
+
+    <!-- Explainer -->
+    <div class="explainer">
+      <div class="section-label">How Proof of Work Functions</div>
+      <p>SHA-256 is a <strong>one-way function</strong> — you cannot reverse-engineer what input produces a specific output. The only way to find a hash with leading zeros is trial and error.</p>
+      <p>Bitcoin miners do this <strong>trillions of times per second</strong>, competing to find a nonce that satisfies the current difficulty target. The winner gets to add the next block and earn the block reward.</p>
+    </div>
+
+  </div>
+
+  <script>
+    const nameEl        = document.getElementById('name');
+    const txEl          = document.getElementById('transaction');
+    const nonceEl       = document.getElementById('nonce');
+    const hashBtn       = document.getElementById('hashBtn');
+    const randomBtn     = document.getElementById('randomBtn');
+    const attemptsEl    = document.getElementById('attempts');
+    const outputCard    = document.getElementById('outputCard');
+    const outputStatus  = document.getElementById('outputStatus');
+    const hashDisplay   = document.getElementById('hashDisplay');
+    const zerosCount    = document.getElementById('zerosCount');
+    const inputString   = document.getElementById('inputString');
+    const successMsg    = document.getElementById('successMsg');
+    const historyCard   = document.getElementById('historyCard');
+    const historyList   = document.getElementById('historyList');
+
+    let attempts = 0;
+    let history  = [];
+
+    async function sha256(message) {
+      const buf = new TextEncoder().encode(message);
+      const hashBuf = await crypto.subtle.digest('SHA-256', buf);
+      return Array.from(new Uint8Array(hashBuf))
+        .map(b => b.toString(16).padStart(2, '0'))
+        .join('');
+    }
+
+    function countLeadingZeros(hash) {
+      let n = 0;
+      for (const c of hash) { if (c === '0') n++; else break; }
+      return n;
+    }
+
+    function checkEnabled() {
+      hashBtn.disabled = !(nameEl.value.trim() && txEl.value.trim() && nonceEl.value.trim());
+    }
+
+    [nameEl, txEl, nonceEl].forEach(el => el.addEventListener('input', checkEnabled));
+
+    nonceEl.addEventListener('keydown', e => { if (e.key === 'Enter' && !hashBtn.disabled) doHash(); });
+
+    randomBtn.addEventListener('click', () => {
+      nonceEl.value = Math.random().toString(36).slice(2, 10);
+      checkEnabled();
+    });
+
+    hashBtn.addEventListener('click', doHash);
+
+    async function doHash() {
+      const name  = nameEl.value.trim();
+      const tx    = txEl.value.trim();
+      const nonce = nonceEl.value.trim();
+      if (!name || !tx || !nonce) return;
+
+      hashBtn.disabled = true;
+      hashBtn.textContent = 'Hashing...';
+
+      const input = `${name}|${tx}|${nonce}`;
+      const hash  = await sha256(input);
+      const zeros = countLeadingZeros(hash);
+      const won   = zeros >= 3;
+
+      attempts++;
+      attemptsEl.textContent = attempts;
+
+      // Build highlighted hash HTML
+      const zerosPart = hash.slice(0, zeros);
+      const restPart  = hash.slice(zeros);
+      hashDisplay.innerHTML =
+        `<span class="hash-zeros">${zerosPart}</span><span class="hash-rest">${restPart}</span>`;
+
+      outputStatus.textContent = won
+        ? '✓ Valid Hash Found!'
+        : '✗ Not Valid — Try a Different Nonce';
+
+      zerosCount.innerHTML = `${zeros} <span>/ 3 needed</span>`;
+      zerosCount.className = 'meta-zeros' + (won ? ' good' : '');
+
+      inputString.textContent = input;
+
+      if (won) {
+        successMsg.innerHTML =
+          `🎉 <strong>Block Mined!</strong> Your nonce <code>${nonce}</code> produced a hash with ${zeros} leading zeros — meeting the proof-of-work target. In Bitcoin, miners do this billions of times per second!`;
+        successMsg.style.display = 'block';
+        outputCard.className = 'output-card success glow';
+        setTimeout(() => outputCard.classList.remove('glow'), 1100);
+      } else {
+        successMsg.style.display = 'none';
+        outputCard.className = 'output-card shake';
+        setTimeout(() => outputCard.classList.remove('shake'), 600);
+      }
+
+      outputCard.style.display = 'block';
+
+      // History
+      history.unshift({ nonce, hash, zeros, won });
+      if (history.length > 5) history.pop();
+
+      if (history.length > 1) {
+        historyCard.style.display = 'block';
+        historyList.innerHTML = history.map(h => `
+          <div class="history-item ${h.won ? 'won' : ''}">
+            <span class="history-icon ${h.won ? 'ok' : 'fail'}">${h.won ? '✓' : '✗'}</span>
+            <span class="history-nonce">nonce: <span>${h.nonce}</span></span>
+            <span class="history-hash">${h.hash}</span>
+            <span class="history-zeros ${h.zeros >= 3 ? 'good' : ''}">${h.zeros} zeros</span>
+          </div>
+        `).join('');
+      }
+
+      hashBtn.textContent = '⬡  Compute SHA-256 Hash';
+      checkEnabled();
+    }
+  </script>
+
+</body>
+</html>
