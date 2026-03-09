@@ -127,6 +127,39 @@
       letter-spacing: 1px;
     }
 
+    .prev-hash-field {
+      background: #07080f;
+      border: 1px solid #1e2a40;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 4px;
+      position: relative;
+    }
+
+    .prev-hash-field::before {
+      content: '🔒 FIXED';
+      position: absolute;
+      top: -9px;
+      right: 14px;
+      font-size: 9px;
+      letter-spacing: 2px;
+      background: #0d1220;
+      padding: 0 8px;
+      color: #4a6a9f;
+      border: 1px solid #1e2a40;
+      border-radius: 4px;
+    }
+
+    .prev-hash-value {
+      font-size: 11px;
+      word-break: break-all;
+      letter-spacing: 1px;
+      color: #5a7aaf;
+      line-height: 1.7;
+      margin-top: 6px;
+      font-family: 'Courier New', monospace;
+    }
+
     input[type="text"] {
       width: 100%;
       background: #070c18;
@@ -402,6 +435,12 @@
     <!-- Input card -->
     <div class="input-card">
       <div>
+        <label class="field-label" style="color:#4a6a9f">Previous Block Hash</label>
+        <div class="prev-hash-field">
+          <div class="prev-hash-value" id="prevHashDisplay">000a7f2c8b1d9e4f7a6c5b8d2e1f0a9c3b7d6e5f4a2c1b8e9d0f3a7c6b5d4e2f</div>
+        </div>
+      </div>
+      <div>
         <label class="field-label" for="name">Your Name</label>
         <input type="text" id="name" placeholder="e.g. Alice" />
       </div>
@@ -468,6 +507,7 @@
     const successMsg    = document.getElementById('successMsg');
     const historyCard   = document.getElementById('historyCard');
     const historyList   = document.getElementById('historyList');
+    const PREV_HASH     = document.getElementById('prevHashDisplay').textContent.trim();
 
     let attempts = 0;
     let history  = [];
@@ -510,7 +550,7 @@
       hashBtn.disabled = true;
       hashBtn.textContent = 'Hashing...';
 
-      const input = `${name}|${tx}|${nonce}`;
+      const input = `${PREV_HASH}|${name}|${tx}|${nonce}`;
       const hash  = await sha256(input);
       const zeros = countLeadingZeros(hash);
       const won   = zeros >= 3;
