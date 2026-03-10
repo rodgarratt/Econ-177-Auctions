@@ -524,7 +524,7 @@
   <div class="header">
     <div class="subtitle">Blockchain Fundamentals Lab</div>
     <h1>Proof of Work Challenge</h1>
-    <p id="headerDesc">Mine a valid hash by finding a nonce that produces <strong id="headerZeros">3 leading zeros</strong>. This is how Bitcoin secures its blockchain.</p>
+    <p id="headerDesc">Mine a valid hash by finding a nonce that produces <strong id="headerZeros">3 leading zeros</strong>. Solve a block and the difficulty <strong>increases for every visitor on earth</strong> — just like Bitcoin.</p>
   </div>
 
   <div class="container">
@@ -549,7 +549,7 @@
 
     <!-- Solved chain display -->
     <div class="chain-card" id="chainCard">
-      <div class="section-label">⛓ Solved Block Chain</div>
+      <div class="section-label">⛓ Global Block Chain — solved by all visitors</div>
       <div class="chain-list" id="chainList"></div>
     </div>
 
@@ -629,7 +629,6 @@
     const outputCard     = document.getElementById('outputCard');
     const outputStatus   = document.getElementById('outputStatus');
     const hashDisplay    = document.getElementById('hashDisplay');
-    const zerosCount     = document.getElementById('zerosCount');
     const inputString    = document.getElementById('inputString');
     const successMsg     = document.getElementById('successMsg');
     const historyCard    = document.getElementById('historyCard');
@@ -644,14 +643,75 @@
     const headerZeros    = document.getElementById('headerZeros');
     const zerosCountEl   = document.getElementById('zerosCount');
 
-    // State
-    let TARGET_ZEROS = 3;
-    let currentPrevHash = prevHashDisplay.textContent.trim();
-    let attempts = 0;
-    let history  = [];
-    let solvedBlocks = []; // { round, zeros, hash, nonce }
-    let roundAttempts = 0;
+    // ── Shared persistent state keys ──────────────────────────────────────
+    const STORAGE_KEY = 'pow-global-state';
 
+    const DEFAULT_STATE = {
+      targetZeros: 3,
+      currentPrevHash: '000a7f2c8b1d9e4f7a6c5b8d2e1f0a9c3b7d6e5f4a2c1b8e9d0f3a7c6b5d4e2f',
+      solvedBlocks: [],   // { round, zeros, hash, nonce, solver }
+      totalSolves: 0,
+    };
+
+    // Local-only state
+    let attempts     = 0;
+    let history      = [];
+    let globalState  = { ...DEFAULT_STATE };
+    let pollingTimer = null;
+
+    // ── Storage helpers ────────────────────────────────────────────────────
+    async function loadGlobalState() {
+      try {
+        const result = await window.storage.get(STORAGE_KEY, true); // shared=true
+        if (result && result.value) {
+          globalState = JSON.parse(result.value);
+        }
+      } catch (_) {
+        // Key doesn't exist yet — use defaults
+        globalState = { ...DEFAULT_STATE };
+      }
+    }
+
+    async function saveGlobalState() {
+      try {
+        await window.storage.set(STORAGE_KEY, JSON.stringify(globalState), true); // shared=true
+      } catch (e) {
+        console.error('Storage save failed:', e);
+      }
+    }
+
+    // ── Polling: refresh shared state every 5 seconds ─────────────────────
+    function startPolling() {
+      pollingTimer = setInterval(async () => {
+        const prevZeros = globalState.targetZeros;
+        const prevRound = globalState.solvedBlocks.length;
+        await loadGlobalState();
+        // If someone else solved a block while we were working, update UI
+        if (globalState.targetZeros !== prevZeros || globalState.solvedBlocks.length !== prevRound) {
+          applyGlobalStateToUI(true);
+        }
+      }, 5000);
+    }
+
+    // ── Apply loaded global state to all UI elements ───────────────────────
+    function applyGlobalStateToUI(fromPoll = false) {
+      prevHashDisplay.textContent = globalState.currentPrevHash;
+      updateTargetUI();
+      renderChain();
+
+      if (fromPoll) {
+        // Show a subtle notification that difficulty changed
+        const banner = document.getElementById('levelupBanner');
+        levelupText.innerHTML =
+          `Another miner solved the previous block! ` +
+          `Difficulty is now <strong>${globalState.targetZeros} leading zeros</strong>. ` +
+          `Current chain length: <strong>${globalState.solvedBlocks.length} blocks</strong>.`;
+        banner.style.display = 'block';
+        setTimeout(() => { banner.style.display = 'none'; }, 6000);
+      }
+    }
+
+    // ── Core crypto ────────────────────────────────────────────────────────
     async function sha256(message) {
       const buf = new TextEncoder().encode(message);
       const hashBuf = await crypto.subtle.digest('SHA-256', buf);
@@ -666,32 +726,33 @@
       return n;
     }
 
+    // ── UI helpers ─────────────────────────────────────────────────────────
     function checkEnabled() {
       hashBtn.disabled = !(nameEl.value.trim() && txEl.value.trim() && nonceEl.value.trim());
     }
 
     function updateTargetUI() {
-      const z = '0'.repeat(TARGET_ZEROS);
+      const z = '0'.repeat(globalState.targetZeros);
       targetPattern.innerHTML = `<span class="zeros">${z}</span><span class="rest">xxxxx...</span>`;
-      headerZeros.textContent = `${TARGET_ZEROS} leading zero${TARGET_ZEROS !== 1 ? 's' : ''}`;
-      roundDisplay.textContent = solvedBlocks.length + 1;
+      headerZeros.textContent = `${globalState.targetZeros} leading zero${globalState.targetZeros !== 1 ? 's' : ''}`;
+      roundDisplay.textContent = globalState.solvedBlocks.length + 1;
     }
 
     function renderChain() {
-      if (solvedBlocks.length === 0) {
-        chainCard.style.display = 'none';
-        return;
-      }
+      const blocks = globalState.solvedBlocks;
+      if (blocks.length === 0) { chainCard.style.display = 'none'; return; }
       chainCard.style.display = 'block';
-      chainList.innerHTML = solvedBlocks.map((b, i) => {
+      chainList.innerHTML = blocks.map((b, i) => {
         const zHtml = `<span class="hz">${b.hash.slice(0, b.zeros)}</span>${b.hash.slice(b.zeros)}`;
-        const connector = i < solvedBlocks.length - 1
+        const connector = i < blocks.length - 1
           ? `<div class="chain-connector">↓ links to ↓</div>` : '';
+        const solverBadge = b.solver
+          ? `<span style="color:#4a9eff;font-size:9px;margin-left:6px">by ${b.solver}</span>` : '';
         return `
           <div class="chain-block" style="animation: slide-in 0.35s ease">
             <div class="chain-block-num">Block ${i + 1}</div>
             <div class="chain-block-info">
-              <div class="chain-block-zeros">${b.zeros} leading zeros · nonce: ${b.nonce}</div>
+              <div class="chain-block-zeros">${b.zeros} leading zeros · nonce: ${b.nonce}${solverBadge}</div>
               <div class="chain-block-hash">${zHtml}</div>
             </div>
           </div>${connector}
@@ -699,6 +760,7 @@
       }).join('');
     }
 
+    // ── Event wiring ───────────────────────────────────────────────────────
     [nameEl, txEl, nonceEl].forEach(el => el.addEventListener('input', checkEnabled));
     nonceEl.addEventListener('keydown', e => { if (e.key === 'Enter' && !hashBtn.disabled) doHash(); });
     randomBtn.addEventListener('click', () => {
@@ -707,6 +769,7 @@
     });
     hashBtn.addEventListener('click', doHash);
 
+    // ── Main hash function ─────────────────────────────────────────────────
     async function doHash() {
       const name  = nameEl.value.trim();
       const tx    = txEl.value.trim();
@@ -717,16 +780,15 @@
       hashBtn.textContent = 'Hashing...';
       levelupBanner.style.display = 'none';
 
-      const input = `${currentPrevHash}|${name}|${tx}|${nonce}`;
+      // Always hash against the latest shared prev-hash
+      const input = `${globalState.currentPrevHash}|${name}|${tx}|${nonce}`;
       const hash  = await sha256(input);
       const zeros = countLeadingZeros(hash);
-      const won   = zeros >= TARGET_ZEROS;
+      const won   = zeros >= globalState.targetZeros;
 
       attempts++;
-      roundAttempts++;
       attemptsEl.textContent = attempts;
 
-      // Build highlighted hash HTML
       const zerosPart = hash.slice(0, zeros);
       const restPart  = hash.slice(zeros);
       hashDisplay.innerHTML =
@@ -736,40 +798,48 @@
         ? '✓ Valid Hash Found!'
         : '✗ Not Valid — Try a Different Nonce';
 
-      zerosCountEl.innerHTML = `${zeros} <span>/ ${TARGET_ZEROS} needed</span>`;
+      zerosCountEl.innerHTML = `${zeros} <span>/ ${globalState.targetZeros} needed</span>`;
       zerosCountEl.className = 'meta-zeros' + (won ? ' good' : '');
 
       inputString.textContent = input;
 
       if (won) {
         successMsg.innerHTML =
-          `🎉 <strong>Block Mined!</strong> Your nonce <code>${nonce}</code> produced a hash with ${zeros} leading zeros — meeting the proof-of-work target of ${TARGET_ZEROS}. In Bitcoin, miners do this billions of times per second!`;
+          `🎉 <strong>Block Mined!</strong> Your nonce <code>${nonce}</code> produced a hash with ${zeros} leading zeros. ` +
+          `This result is now <strong>saved globally</strong> — everyone visiting this page will now need to find ` +
+          `<strong>${globalState.targetZeros + 1} leading zeros</strong>!`;
         successMsg.style.display = 'block';
         outputCard.className = 'output-card success glow';
         setTimeout(() => outputCard.classList.remove('glow'), 1100);
 
-        // Record the solved block
-        solvedBlocks.push({ round: solvedBlocks.length + 1, zeros, hash, nonce });
+        // ── Update shared global state ──────────────────────────────────
+        // Re-fetch first to avoid overwriting a concurrent solve
+        await loadGlobalState();
 
-        // Advance state
-        const prevZeros = TARGET_ZEROS;
-        TARGET_ZEROS++;
-        currentPrevHash = hash;
-        prevHashDisplay.textContent = hash;
+        // Only advance if nobody else already solved this round
+        if (zeros >= globalState.targetZeros) {
+          globalState.solvedBlocks.push({
+            round:  globalState.solvedBlocks.length + 1,
+            zeros,
+            hash,
+            nonce,
+            solver: name,
+          });
+          globalState.totalSolves++;
+          globalState.targetZeros++;
+          globalState.currentPrevHash = hash;
+          await saveGlobalState();
+        }
+        // ───────────────────────────────────────────────────────────────
 
-        // Show level-up banner
         levelupText.innerHTML =
           `The winning hash is now the <strong>fixed previous block hash</strong> for the next round. ` +
-          `Difficulty increases: now find <strong>${TARGET_ZEROS} leading zeros</strong>!`;
+          `Global difficulty increased: all visitors must now find <strong>${globalState.targetZeros} leading zeros</strong>!`;
         levelupBanner.style.display = 'block';
 
-        // Update UI
-        updateTargetUI();
-        renderChain();
+        applyGlobalStateToUI(false);
 
-        // Clear nonce for next round
         nonceEl.value = '';
-        roundAttempts = 0;
 
       } else {
         successMsg.style.display = 'none';
@@ -779,7 +849,7 @@
 
       outputCard.style.display = 'block';
 
-      // History (per-round)
+      // Local history
       history.unshift({ nonce, hash, zeros, won });
       if (history.length > 5) history.pop();
 
@@ -790,7 +860,7 @@
             <span class="history-icon ${h.won ? 'ok' : 'fail'}">${h.won ? '✓' : '✗'}</span>
             <span class="history-nonce">nonce: <span>${h.nonce}</span></span>
             <span class="history-hash">${h.hash}</span>
-            <span class="history-zeros ${h.zeros >= TARGET_ZEROS ? 'good' : ''}">${h.zeros} zeros</span>
+            <span class="history-zeros ${h.zeros >= globalState.targetZeros ? 'good' : ''}">${h.zeros} zeros</span>
           </div>
         `).join('');
       }
@@ -798,6 +868,18 @@
       hashBtn.textContent = '⬡  Compute SHA-256 Hash';
       checkEnabled();
     }
+
+    // ── Boot ───────────────────────────────────────────────────────────────
+    (async () => {
+      // Show loading state
+      hashBtn.disabled = true;
+      targetPattern.innerHTML = `<span class="zeros" style="opacity:0.4">loading...</span>`;
+
+      await loadGlobalState();
+      applyGlobalStateToUI(false);
+      checkEnabled();
+      startPolling();
+    })();
   </script>
 
 </body>
