@@ -100,6 +100,85 @@
       color: #e0eaff;
     }
 
+    .round-badge {
+      text-align: center;
+    }
+
+    .round-number {
+      font-size: 28px;
+      font-weight: 900;
+      color: #f0c040;
+    }
+
+    /* Chain display */
+    .chain-card {
+      background: #0a0f1a;
+      border: 1px solid #1a2a40;
+      border-radius: 16px;
+      padding: 20px 24px;
+      display: none;
+    }
+
+    .chain-card .section-label {
+      margin-bottom: 14px;
+    }
+
+    .chain-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .chain-block {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 16px;
+      background: #070c18;
+      border-radius: 10px;
+      border: 1px solid #1a3a20;
+      position: relative;
+    }
+
+    .chain-block-num {
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: #00cc7a;
+      text-transform: uppercase;
+      min-width: 56px;
+      padding-top: 2px;
+    }
+
+    .chain-block-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .chain-block-zeros {
+      font-size: 9px;
+      letter-spacing: 2px;
+      color: #3a7050;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .chain-block-hash {
+      font-size: 11px;
+      word-break: break-all;
+      color: #5a7aaf;
+      line-height: 1.5;
+    }
+
+    .chain-block-hash .hz { color: #00ff9f; font-weight: 700; }
+
+    .chain-connector {
+      text-align: center;
+      font-size: 10px;
+      color: #1e3a30;
+      letter-spacing: 1px;
+      padding: 2px 0;
+    }
+
     /* Input card */
     .input-card {
       background: #0d1220;
@@ -265,6 +344,11 @@
       100%{box-shadow:0 0 0 0 #00ff9f00}
     }
 
+    @keyframes slide-in {
+      from { opacity: 0; transform: translateY(-12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
     .output-status {
       font-size: 10px;
       letter-spacing: 3px;
@@ -338,6 +422,33 @@
       border-radius: 4px;
       color: #00ff9f;
     }
+
+    /* Level-up banner */
+    .levelup-banner {
+      display: none;
+      background: linear-gradient(135deg, #1a2e10, #0e2318);
+      border: 1px solid #00ff9f;
+      border-radius: 14px;
+      padding: 20px 24px;
+      text-align: center;
+      animation: slide-in 0.4s ease;
+    }
+
+    .levelup-banner .levelup-title {
+      font-size: 11px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: #00ff9f;
+      margin-bottom: 6px;
+    }
+
+    .levelup-banner .levelup-text {
+      font-size: 15px;
+      color: #c0e8c8;
+      line-height: 1.6;
+    }
+
+    .levelup-banner .levelup-text strong { color: #00ff9f; }
 
     /* History */
     .history-card {
@@ -413,7 +524,7 @@
   <div class="header">
     <div class="subtitle">Blockchain Fundamentals Lab</div>
     <h1>Proof of Work Challenge</h1>
-    <p>Mine a valid hash by finding a nonce that produces <strong>3 leading zeros</strong>. This is how Bitcoin secures its blockchain.</p>
+    <p id="headerDesc">Mine a valid hash by finding a nonce that produces <strong id="headerZeros">3 leading zeros</strong>. This is how Bitcoin secures its blockchain.</p>
   </div>
 
   <div class="container">
@@ -422,14 +533,24 @@
     <div class="target-bar">
       <div>
         <div class="label">Target Pattern</div>
-        <div class="target-pattern">
+        <div class="target-pattern" id="targetPattern">
           <span class="zeros">000</span><span class="rest">xxxxx...</span>
         </div>
+      </div>
+      <div class="round-badge">
+        <div class="label">Round</div>
+        <div class="round-number" id="roundDisplay">1</div>
       </div>
       <div style="text-align:right">
         <div class="label">Attempts</div>
         <div class="attempts-count" id="attempts">0</div>
       </div>
+    </div>
+
+    <!-- Solved chain display -->
+    <div class="chain-card" id="chainCard">
+      <div class="section-label">⛓ Solved Block Chain</div>
+      <div class="chain-list" id="chainList"></div>
     </div>
 
     <!-- Input card -->
@@ -477,6 +598,12 @@
       <div class="success-msg" id="successMsg"></div>
     </div>
 
+    <!-- Level-up banner -->
+    <div class="levelup-banner" id="levelupBanner">
+      <div class="levelup-title">🔗 Block Added to Chain!</div>
+      <div class="levelup-text" id="levelupText"></div>
+    </div>
+
     <!-- History -->
     <div class="history-card" id="historyCard">
       <div class="section-label">Recent Attempts</div>
@@ -493,24 +620,37 @@
   </div>
 
   <script>
-    const nameEl        = document.getElementById('name');
-    const txEl          = document.getElementById('transaction');
-    const nonceEl       = document.getElementById('nonce');
-    const hashBtn       = document.getElementById('hashBtn');
-    const randomBtn     = document.getElementById('randomBtn');
-    const attemptsEl    = document.getElementById('attempts');
-    const outputCard    = document.getElementById('outputCard');
-    const outputStatus  = document.getElementById('outputStatus');
-    const hashDisplay   = document.getElementById('hashDisplay');
-    const zerosCount    = document.getElementById('zerosCount');
-    const inputString   = document.getElementById('inputString');
-    const successMsg    = document.getElementById('successMsg');
-    const historyCard   = document.getElementById('historyCard');
-    const historyList   = document.getElementById('historyList');
-    const PREV_HASH     = document.getElementById('prevHashDisplay').textContent.trim();
+    const nameEl         = document.getElementById('name');
+    const txEl           = document.getElementById('transaction');
+    const nonceEl        = document.getElementById('nonce');
+    const hashBtn        = document.getElementById('hashBtn');
+    const randomBtn      = document.getElementById('randomBtn');
+    const attemptsEl     = document.getElementById('attempts');
+    const outputCard     = document.getElementById('outputCard');
+    const outputStatus   = document.getElementById('outputStatus');
+    const hashDisplay    = document.getElementById('hashDisplay');
+    const zerosCount     = document.getElementById('zerosCount');
+    const inputString    = document.getElementById('inputString');
+    const successMsg     = document.getElementById('successMsg');
+    const historyCard    = document.getElementById('historyCard');
+    const historyList    = document.getElementById('historyList');
+    const prevHashDisplay= document.getElementById('prevHashDisplay');
+    const chainCard      = document.getElementById('chainCard');
+    const chainList      = document.getElementById('chainList');
+    const levelupBanner  = document.getElementById('levelupBanner');
+    const levelupText    = document.getElementById('levelupText');
+    const targetPattern  = document.getElementById('targetPattern');
+    const roundDisplay   = document.getElementById('roundDisplay');
+    const headerZeros    = document.getElementById('headerZeros');
+    const zerosCountEl   = document.getElementById('zerosCount');
 
+    // State
+    let TARGET_ZEROS = 3;
+    let currentPrevHash = prevHashDisplay.textContent.trim();
     let attempts = 0;
     let history  = [];
+    let solvedBlocks = []; // { round, zeros, hash, nonce }
+    let roundAttempts = 0;
 
     async function sha256(message) {
       const buf = new TextEncoder().encode(message);
@@ -530,15 +670,41 @@
       hashBtn.disabled = !(nameEl.value.trim() && txEl.value.trim() && nonceEl.value.trim());
     }
 
+    function updateTargetUI() {
+      const z = '0'.repeat(TARGET_ZEROS);
+      targetPattern.innerHTML = `<span class="zeros">${z}</span><span class="rest">xxxxx...</span>`;
+      headerZeros.textContent = `${TARGET_ZEROS} leading zero${TARGET_ZEROS !== 1 ? 's' : ''}`;
+      roundDisplay.textContent = solvedBlocks.length + 1;
+    }
+
+    function renderChain() {
+      if (solvedBlocks.length === 0) {
+        chainCard.style.display = 'none';
+        return;
+      }
+      chainCard.style.display = 'block';
+      chainList.innerHTML = solvedBlocks.map((b, i) => {
+        const zHtml = `<span class="hz">${b.hash.slice(0, b.zeros)}</span>${b.hash.slice(b.zeros)}`;
+        const connector = i < solvedBlocks.length - 1
+          ? `<div class="chain-connector">↓ links to ↓</div>` : '';
+        return `
+          <div class="chain-block" style="animation: slide-in 0.35s ease">
+            <div class="chain-block-num">Block ${i + 1}</div>
+            <div class="chain-block-info">
+              <div class="chain-block-zeros">${b.zeros} leading zeros · nonce: ${b.nonce}</div>
+              <div class="chain-block-hash">${zHtml}</div>
+            </div>
+          </div>${connector}
+        `;
+      }).join('');
+    }
+
     [nameEl, txEl, nonceEl].forEach(el => el.addEventListener('input', checkEnabled));
-
     nonceEl.addEventListener('keydown', e => { if (e.key === 'Enter' && !hashBtn.disabled) doHash(); });
-
     randomBtn.addEventListener('click', () => {
       nonceEl.value = Math.random().toString(36).slice(2, 10);
       checkEnabled();
     });
-
     hashBtn.addEventListener('click', doHash);
 
     async function doHash() {
@@ -549,13 +715,15 @@
 
       hashBtn.disabled = true;
       hashBtn.textContent = 'Hashing...';
+      levelupBanner.style.display = 'none';
 
-      const input = `${PREV_HASH}|${name}|${tx}|${nonce}`;
+      const input = `${currentPrevHash}|${name}|${tx}|${nonce}`;
       const hash  = await sha256(input);
       const zeros = countLeadingZeros(hash);
-      const won   = zeros >= 3;
+      const won   = zeros >= TARGET_ZEROS;
 
       attempts++;
+      roundAttempts++;
       attemptsEl.textContent = attempts;
 
       // Build highlighted hash HTML
@@ -568,17 +736,41 @@
         ? '✓ Valid Hash Found!'
         : '✗ Not Valid — Try a Different Nonce';
 
-      zerosCount.innerHTML = `${zeros} <span>/ 3 needed</span>`;
-      zerosCount.className = 'meta-zeros' + (won ? ' good' : '');
+      zerosCountEl.innerHTML = `${zeros} <span>/ ${TARGET_ZEROS} needed</span>`;
+      zerosCountEl.className = 'meta-zeros' + (won ? ' good' : '');
 
       inputString.textContent = input;
 
       if (won) {
         successMsg.innerHTML =
-          `🎉 <strong>Block Mined!</strong> Your nonce <code>${nonce}</code> produced a hash with ${zeros} leading zeros — meeting the proof-of-work target. In Bitcoin, miners do this billions of times per second!`;
+          `🎉 <strong>Block Mined!</strong> Your nonce <code>${nonce}</code> produced a hash with ${zeros} leading zeros — meeting the proof-of-work target of ${TARGET_ZEROS}. In Bitcoin, miners do this billions of times per second!`;
         successMsg.style.display = 'block';
         outputCard.className = 'output-card success glow';
         setTimeout(() => outputCard.classList.remove('glow'), 1100);
+
+        // Record the solved block
+        solvedBlocks.push({ round: solvedBlocks.length + 1, zeros, hash, nonce });
+
+        // Advance state
+        const prevZeros = TARGET_ZEROS;
+        TARGET_ZEROS++;
+        currentPrevHash = hash;
+        prevHashDisplay.textContent = hash;
+
+        // Show level-up banner
+        levelupText.innerHTML =
+          `The winning hash is now the <strong>fixed previous block hash</strong> for the next round. ` +
+          `Difficulty increases: now find <strong>${TARGET_ZEROS} leading zeros</strong>!`;
+        levelupBanner.style.display = 'block';
+
+        // Update UI
+        updateTargetUI();
+        renderChain();
+
+        // Clear nonce for next round
+        nonceEl.value = '';
+        roundAttempts = 0;
+
       } else {
         successMsg.style.display = 'none';
         outputCard.className = 'output-card shake';
@@ -587,7 +779,7 @@
 
       outputCard.style.display = 'block';
 
-      // History
+      // History (per-round)
       history.unshift({ nonce, hash, zeros, won });
       if (history.length > 5) history.pop();
 
@@ -598,7 +790,7 @@
             <span class="history-icon ${h.won ? 'ok' : 'fail'}">${h.won ? '✓' : '✗'}</span>
             <span class="history-nonce">nonce: <span>${h.nonce}</span></span>
             <span class="history-hash">${h.hash}</span>
-            <span class="history-zeros ${h.zeros >= 3 ? 'good' : ''}">${h.zeros} zeros</span>
+            <span class="history-zeros ${h.zeros >= TARGET_ZEROS ? 'good' : ''}">${h.zeros} zeros</span>
           </div>
         `).join('');
       }
