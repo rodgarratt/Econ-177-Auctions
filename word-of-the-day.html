@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Word of the Day — Check-In</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --ink: #1a1a2e;
+    --paper: #f5f0e8;
+    --accent: #c84b31;
+    --gold: #d4a043;
+    --soft: #e8e0d0;
+    --muted: #7a7060;
+    --green: #2d6a4f;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Crect width='4' height='4' fill='%23f5f0e8'/%3E%3Ccircle cx='1' cy='1' r='0.5' fill='%23d4c8b0' opacity='0.4'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page {
+    position: relative;
+    z-index: 1;
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 60px 24px 80px;
+  }
+
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 56px;
+    animation: fadeDown 0.6s ease both;
+  }
+
+  .header .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+
+  .header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(38px, 7vw, 58px);
+    line-height: 1.1;
+    color: var(--ink);
+    margin-bottom: 12px;
+  }
+
+  .header h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .header .sub {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 48px 0;
+  }
+
+  .divider::before,
+  .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--soft);
+  }
+
+  .divider span {
+    font-size: 18px;
+    color: var(--gold);
+  }
+
+  /* Form card */
+  .card {
+    background: white;
+    border: 1px solid var(--soft);
+    border-radius: 4px;
+    padding: 40px 40px;
+    box-shadow: 4px 4px 0 var(--soft);
+    animation: fadeUp 0.6s ease 0.1s both;
+  }
+
+  .field {
+    margin-bottom: 28px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+  }
+
+  .field input {
+    width: 100%;
+    border: none;
+    border-bottom: 2px solid var(--soft);
+    background: transparent;
+    padding: 10px 0;
+    font-family: 'DM Mono', monospace;
+    font-size: 20px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .field input:focus {
+    border-bottom-color: var(--accent);
+  }
+
+  .field input::placeholder {
+    color: #ccc;
+    font-size: 16px;
+  }
+
+  .field-hint {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 6px;
+    letter-spacing: 0.05em;
+  }
+
+  .submit-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    border-radius: 2px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.1s;
+    margin-top: 8px;
+  }
+
+  .submit-btn:hover {
+    background: var(--accent);
+  }
+
+  .submit-btn:active {
+    transform: translateY(1px);
+  }
+
+  /* Success message */
+  .success-msg {
+    display: none;
+    background: #eaf5ef;
+    border: 1px solid #a8d5b5;
+    border-left: 4px solid var(--green);
+    padding: 16px 20px;
+    border-radius: 2px;
+    margin-top: 20px;
+    animation: fadeUp 0.3s ease both;
+  }
+
+  .success-msg.show { display: block; }
+
+  .success-msg .success-title {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 4px;
+  }
+
+  .success-msg .success-detail {
+    font-size: 12px;
+    color: var(--ink);
+    line-height: 1.7;
+  }
+
+  /* Error message */
+  .error-msg {
+    display: none;
+    background: #fdf0ee;
+    border: 1px solid #f0b8b0;
+    border-left: 4px solid var(--accent);
+    padding: 12px 16px;
+    border-radius: 2px;
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--accent);
+  }
+
+  .error-msg.show { display: block; }
+
+  /* Admin section */
+  .admin-section {
+    margin-top: 64px;
+    animation: fadeUp 0.6s ease 0.2s both;
+  }
+
+  .admin-toggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    user-select: none;
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .admin-toggle::before {
+    content: '▸';
+    font-size: 14px;
+    transition: transform 0.2s;
+  }
+
+  .admin-toggle.open::before {
+    transform: rotate(90deg);
+  }
+
+  .admin-panel {
+    display: none;
+    margin-top: 24px;
+    background: white;
+    border: 1px solid var(--soft);
+    border-radius: 4px;
+    padding: 32px;
+    box-shadow: 4px 4px 0 var(--soft);
+  }
+
+  .admin-panel.open { display: block; }
+
+  .admin-panel h3 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    margin-bottom: 20px;
+    color: var(--ink);
+  }
+
+  /* Entries table */
+  .entries-wrapper {
+    overflow-x: auto;
+    margin-bottom: 20px;
+  }
+
+  .entries-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  .entries-table th {
+    text-align: left;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 8px 12px;
+    border-bottom: 2px solid var(--soft);
+  }
+
+  .entries-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--soft);
+    color: var(--ink);
+    line-height: 1.4;
+  }
+
+  .entries-table tr:last-child td { border-bottom: none; }
+
+  .entries-table tr:hover td { background: #faf7f2; }
+
+  .empty-state {
+    text-align: center;
+    padding: 32px;
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+  }
+
+  .download-btn {
+    padding: 12px 24px;
+    background: var(--green);
+    color: white;
+    border: none;
+    border-radius: 2px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .download-btn:hover { opacity: 0.85; }
+  .download-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .clear-btn {
+    padding: 12px 24px;
+    background: transparent;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 2px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-left: 12px;
+  }
+
+  .clear-btn:hover {
+    background: var(--accent);
+    color: white;
+  }
+
+  .count-badge {
+    display: inline-block;
+    background: var(--ink);
+    color: var(--paper);
+    font-size: 9px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    letter-spacing: 0.1em;
+    margin-left: 10px;
+    vertical-align: middle;
+  }
+
+  /* Animations */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Timestamp in form */
+  .live-time {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    text-align: right;
+    margin-bottom: 24px;
+  }
+
+  .live-time span { color: var(--ink); font-weight: 500; }
+
+  @media (max-width: 500px) {
+    .card { padding: 28px 20px; }
+    .admin-panel { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <header class="header">
+    <p class="eyebrow">Daily Check-In</p>
+    <h1>Word of the <em>Day</em></h1>
+    <p class="sub">Enter your student ID number and today's word to log your attendance.</p>
+  </header>
+
+  <!-- Form Card -->
+  <div class="card">
+    <div class="live-time">Current time: <span id="live-clock">—</span></div>
+
+    <div class="field">
+      <label for="perm">Student ID</label>
+      <input type="text" id="perm" placeholder="e.g. 1234567" maxlength="20" autocomplete="off" inputmode="numeric">
+      <p class="field-hint">Your student ID number</p>
+    </div>
+
+    <div class="field">
+      <label for="word">Word of the Day</label>
+      <input type="text" id="word" placeholder="Enter today's word..." maxlength="60" autocomplete="off">
+    </div>
+
+    <button class="submit-btn" onclick="handleSubmit()">Submit Check-In</button>
+
+    <div class="error-msg" id="error-msg"></div>
+    <div class="success-msg" id="success-msg">
+      <p class="success-title">✓ Submitted!</p>
+      <p class="success-detail" id="success-detail"></p>
+    </div>
+  </div>
+
+  <div class="divider"><span>✦</span></div>
+
+  <!-- Admin Section -->
+  <div class="admin-section">
+    <div class="admin-toggle" id="admin-toggle" onclick="toggleAdmin()">
+      Instructor View
+    </div>
+
+    <!-- Password prompt -->
+    <div class="admin-panel" id="password-panel">
+      <div class="field" style="margin-bottom:20px">
+        <label for="admin-password">Instructor Password</label>
+        <input type="password" id="admin-password" placeholder="Enter password..." onkeydown="if(event.key==='Enter') checkPassword()">
+      </div>
+      <div class="error-msg" id="pw-error" style="margin-top:0; margin-bottom:16px"></div>
+      <button class="submit-btn" style="margin-top:0" onclick="checkPassword()">Unlock</button>
+    </div>
+
+    <div class="admin-panel" id="admin-panel">
+      <h3>Submissions <span id="entry-count-badge" class="count-badge">0 entries</span></h3>
+      <div class="entries-wrapper">
+        <div id="entries-container">
+          <p class="empty-state">No submissions yet.</p>
+        </div>
+      </div>
+      <div style="margin-top:16px">
+        <button class="download-btn" id="download-btn" onclick="downloadExcel()" disabled>
+          ⬇ Download Excel
+        </button>
+        <button class="clear-btn" onclick="clearEntries()">Clear All</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ── State ─────────────────────────────────────────────────────────────────
+  const STORAGE_KEY = 'wotd_entries';
+
+  function getEntries() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+    catch { return []; }
+  }
+
+  function saveEntries(entries) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+  }
+
+  // ── Live clock ─────────────────────────────────────────────────────────────
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('live-clock').textContent = now.toLocaleString('en-US', {
+      weekday: 'short', month: 'short', day: 'numeric',
+      year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit'
+    });
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // ── Submit ─────────────────────────────────────────────────────────────────
+  function handleSubmit() {
+    const perm = document.getElementById('perm').value.trim();
+    const word = document.getElementById('word').value.trim();
+    const errEl = document.getElementById('error-msg');
+    const sucEl = document.getElementById('success-msg');
+
+    errEl.classList.remove('show');
+    sucEl.classList.remove('show');
+
+    if (!perm) return showError('Please enter your student ID number.');
+    if (!/^\d{5,10}$/.test(perm)) return showError('Student ID number should be 5–10 digits.');
+    if (!word) return showError('Please enter the word of the day.');
+    if (word.length < 2) return showError('Word seems too short — please check it.');
+
+    const now = new Date();
+    const entry = {
+      perm,
+      word,
+      date: now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
+      time: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+      timestamp: now.toISOString(),
+      display: now.toLocaleString('en-US', {
+        month: 'short', day: 'numeric', year: 'numeric',
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+      })
+    };
+
+    const entries = getEntries();
+    entries.push(entry);
+    saveEntries(entries);
+
+    document.getElementById('perm').value = '';
+    document.getElementById('word').value = '';
+
+    document.getElementById('success-detail').textContent =
+      `ID #${perm} — "${word}" — logged at ${entry.display}`;
+    sucEl.classList.add('show');
+
+    updateAdminPanel();
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('error-msg');
+    el.textContent = msg;
+    el.classList.add('show');
+  }
+
+  // Enter key support
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      if (document.activeElement && document.activeElement.id === 'admin-password') return;
+      handleSubmit();
+    }
+  });
+
+  // ── Admin panel ────────────────────────────────────────────────────────────
+  const CORRECT_PASSWORD = 'first_504';
+  let adminUnlocked = false;
+
+  function toggleAdmin() {
+    const toggle = document.getElementById('admin-toggle');
+    toggle.classList.toggle('open');
+    if (adminUnlocked) {
+      const panel = document.getElementById('admin-panel');
+      panel.classList.toggle('open');
+      if (panel.classList.contains('open')) updateAdminPanel();
+    } else {
+      const pwPanel = document.getElementById('password-panel');
+      pwPanel.classList.toggle('open');
+      if (pwPanel.classList.contains('open')) {
+        setTimeout(() => document.getElementById('admin-password').focus(), 50);
+      }
+    }
+  }
+
+  function checkPassword() {
+    const input = document.getElementById('admin-password').value;
+    const errEl = document.getElementById('pw-error');
+    if (input === CORRECT_PASSWORD) {
+      adminUnlocked = true;
+      document.getElementById('password-panel').classList.remove('open');
+      document.getElementById('admin-password').value = '';
+      errEl.classList.remove('show');
+      const panel = document.getElementById('admin-panel');
+      panel.classList.add('open');
+      updateAdminPanel();
+    } else {
+      errEl.textContent = 'Incorrect password. Please try again.';
+      errEl.classList.add('show');
+      document.getElementById('admin-password').value = '';
+      document.getElementById('admin-password').focus();
+    }
+  }
+
+  function updateAdminPanel() {
+    const entries = getEntries();
+    const badge = document.getElementById('entry-count-badge');
+    const downloadBtn = document.getElementById('download-btn');
+
+    badge.textContent = entries.length === 1 ? '1 entry' : `${entries.length} entries`;
+    downloadBtn.disabled = entries.length === 0;
+
+    const container = document.getElementById('entries-container');
+    if (entries.length === 0) {
+      container.innerHTML = '<p class="empty-state">No submissions yet.</p>';
+      return;
+    }
+
+    const rows = [...entries].reverse().map((e, i) => `
+      <tr>
+        <td>${entries.length - i}</td>
+        <td>${e.perm}</td>
+        <td><strong>${e.word}</strong></td>
+        <td>${e.date}</td>
+        <td>${e.time}</td>
+      </tr>
+    `).join('');
+
+    container.innerHTML = `
+      <table class="entries-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Student ID</th>
+            <th>Word</th>
+            <th>Date</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+
+  function clearEntries() {
+    if (!confirm('Clear all entries? This cannot be undone.')) return;
+    saveEntries([]);
+    updateAdminPanel();
+    document.getElementById('success-msg').classList.remove('show');
+  }
+
+  // ── Excel download ─────────────────────────────────────────────────────────
+  function downloadExcel() {
+    const entries = getEntries();
+    if (entries.length === 0) return;
+
+    const wsData = [
+      ['#', 'Student ID', 'Word of the Day', 'Date', 'Time', 'Full Timestamp']
+    ];
+    entries.forEach((e, i) => {
+      wsData.push([i + 1, e.perm, e.word, e.date, e.time, e.display]);
+    });
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+    // Column widths
+    ws['!cols'] = [
+      { wch: 5 }, { wch: 16 }, { wch: 24 },
+      { wch: 32 }, { wch: 16 }, { wch: 32 }
+    ];
+
+    XLSX.utils.book_append_sheet(wb, ws, 'Submissions');
+
+    const dateStr = new Date().toLocaleDateString('en-US', {
+      year: 'numeric', month: '2-digit', day: '2-digit'
+    }).replace(/\//g, '-');
+
+    XLSX.writeFile(wb, `word-of-the-day-${dateStr}.xlsx`);
+  }
+
+  // Init count badge
+  updateAdminPanel();
+</script>
+</body>
+</html>
