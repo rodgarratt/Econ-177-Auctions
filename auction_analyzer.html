@@ -343,7 +343,41 @@
     line-height: 1.7;
   }
 
-  .option-item.coming-soon {
+  .upload-slot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius);
+    margin-bottom: 6px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    background: var(--bg);
+  }
+  .upload-slot:hover { border-color: var(--accent); background: var(--accent-light); }
+  .upload-slot.loaded { border-style: solid; border-color: var(--accent); background: var(--accent-light); }
+  .upload-slot.drag-over { border-color: var(--accent); background: var(--accent-light); }
+  .upload-slot input { display: none; }
+  .slot-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-3);
+    white-space: nowrap;
+    min-width: 52px;
+  }
+  .slot-status {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-3);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .slot-status.ok { color: var(--accent); }
+  .slot-icon { color: var(--ink-3); flex-shrink: 0; }
+  .upload-slot.loaded .slot-icon { color: var(--accent); }
     opacity: 0.45;
     cursor: not-allowed;
   }
@@ -397,18 +431,7 @@
   <aside class="sidebar">
     <div class="panel">
       <div class="panel-title">01 — Upload Data</div>
-      <div class="drop-zone" id="dropZone">
-        <input type="file" id="fileInput" accept=".xls,.xlsx">
-        <svg class="drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
-        </svg>
-        <div class="drop-label">
-          <strong>Drop Excel file here</strong><br>
-          or click to browse<br>
-          <span style="font-size:0.75rem;color:var(--ink-3);">.xls or .xlsx · Needs: Private Value, Bid Amount</span>
-        </div>
-        <div class="file-status" id="fileStatus"></div>
-      </div>
+      <div id="uploadSlots"></div>
       <div class="error-msg" id="errorMsg"></div>
     </div>
 
@@ -443,9 +466,95 @@ const OPTIONS = [
   { id: 8, label: 'First-price, 2-bidder, $25 entry fee', tag: 'first',  desc: 'FPSB · 2 players · fee=$25' },
 ];
 
-let csvData = [];
+let dataStore = {}; // keyed by option id
 let selectedOption = null;
 let activeChart = null;
+
+const LIVE_OPTIONS = [1, 2, 3, 4];
+
+const uploadSlots = document.getElementById('uploadSlots');
+const errorMsg = document.getElementById('errorMsg');
+const runBtn = document.getElementById('runBtn');
+
+function showError(msg) { errorMsg.style.display = 'block'; errorMsg.textContent = msg; }
+function hideError() { errorMsg.style.display = 'none'; }
+
+function buildUploadSlots() {
+  LIVE_OPTIONS.forEach(id => {
+    const opt = OPTIONS.find(o => o.id === id);
+    const slot = document.createElement('div');
+    slot.className = 'upload-slot';
+    slot.id = `slot-${id}`;
+    slot.innerHTML = `
+      <input type="file" id="file-${id}" accept=".xls,.xlsx">
+      <svg class="slot-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+      </svg>
+      <span class="slot-label">Option ${id}</span>
+      <span class="slot-status" id="slot-status-${id}">click or drop</span>`;
+
+    slot.addEventListener('click', () => document.getElementById(`file-${id}`).click());
+    slot.addEventListener('dragover', e => { e.preventDefault(); slot.classList.add('drag-over'); });
+    slot.addEventListener('dragleave', () => slot.classList.remove('drag-over'));
+    slot.addEventListener('drop', e => {
+      e.preventDefault();
+      slot.classList.remove('drag-over');
+      if (e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0], id);
+    });
+    document.getElementById(`file-${id}`) && slot.querySelector('input').addEventListener('change', function() {
+      if (this.files[0]) processFile(this.files[0], id);
+    });
+
+    uploadSlots.appendChild(slot);
+
+    // wire the hidden input after appending
+    slot.querySelector('input').addEventListener('change', function() {
+      if (this.files[0]) processFile(this.files[0], id);
+    });
+  });
+}
+buildUploadSlots();
+
+function parseRows(rows) {
+  if (!rows.length) return null;
+  const headers = Object.keys(rows[0]).map(h => h.trim().toLowerCase());
+  const pvCol = headers.find(h => h.includes('private') || h === 'pv' || h === 'value' || h === 'private_value' || h === 'privatevalue');
+  const bidCol = headers.find(h => h.includes('bid') || h === 'bid_amount' || h === 'bidamount');
+  if (!pvCol || !bidCol) return { error: `Could not find required columns. Found: ${Object.keys(rows[0]).join(', ')}` };
+  const origHeaders = Object.keys(rows[0]);
+  const pvColOrig = origHeaders.find(h => h.trim().toLowerCase() === pvCol);
+  const bidColOrig = origHeaders.find(h => h.trim().toLowerCase() === bidCol);
+  const data = rows
+    .map(r => ({ pv: parseFloat(r[pvColOrig]), bid: parseFloat(r[bidColOrig]) }))
+    .filter(r => !isNaN(r.pv) && !isNaN(r.bid) && r.bid <= 100);
+  if (data.length < 3) return { error: 'Need at least 3 valid data rows.' };
+  return { data };
+}
+
+function processFile(file, optId) {
+  hideError();
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+      const result = parseRows(rows);
+      if (!result) { showError('Spreadsheet appears empty.'); return; }
+      if (result.error) { showError(result.error); return; }
+      dataStore[optId] = result.data;
+      const slot = document.getElementById(`slot-${optId}`);
+      const statusEl = document.getElementById(`slot-status-${optId}`);
+      slot.classList.add('loaded');
+      statusEl.className = 'slot-status ok';
+      statusEl.textContent = `✓ ${result.data.length} rows`;
+      checkReady();
+    } catch(err) {
+      showError('Failed to parse Excel file: ' + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
 
 const optionsList = document.getElementById('optionsList');
 OPTIONS.forEach(opt => {
@@ -472,70 +581,8 @@ OPTIONS.forEach(opt => {
   optionsList.appendChild(item);
 });
 
-const dropZone = document.getElementById('dropZone');
-const fileInput = document.getElementById('fileInput');
-const fileStatus = document.getElementById('fileStatus');
-const errorMsg = document.getElementById('errorMsg');
-const runBtn = document.getElementById('runBtn');
-
-dropZone.addEventListener('click', () => fileInput.click());
-dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-dropZone.addEventListener('drop', e => {
-  e.preventDefault();
-  dropZone.classList.remove('drag-over');
-  if (e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]);
-});
-fileInput.addEventListener('change', () => { if (fileInput.files[0]) processFile(fileInput.files[0]); });
-
-function showError(msg) {
-  errorMsg.style.display = 'block';
-  errorMsg.textContent = msg;
-}
-function hideError() { errorMsg.style.display = 'none'; }
-
-function processFile(file) {
-  hideError();
-  const reader = new FileReader();
-  reader.onload = e => {
-    try {
-      const wb = XLSX.read(e.target.result, { type: 'array' });
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
-
-      if (!rows.length) { showError('Spreadsheet appears empty.'); return; }
-      const headers = Object.keys(rows[0]).map(h => h.trim().toLowerCase());
-
-      const pvCol = headers.find(h => h.includes('private') || h === 'pv' || h === 'value' || h === 'private_value' || h === 'privatevalue');
-      const bidCol = headers.find(h => h.includes('bid') || h === 'bid_amount' || h === 'bidamount');
-
-      if (!pvCol || !bidCol) {
-        showError(`Could not find required columns. Expected "Private Value" and "Bid Amount". Found: ${Object.keys(rows[0]).join(', ')}`);
-        return;
-      }
-
-      const origHeaders = Object.keys(rows[0]);
-      const pvColOrig = origHeaders.find(h => h.trim().toLowerCase() === pvCol);
-      const bidColOrig = origHeaders.find(h => h.trim().toLowerCase() === bidCol);
-
-      csvData = rows
-        .map(r => ({ pv: parseFloat(r[pvColOrig]), bid: parseFloat(r[bidColOrig]) }))
-        .filter(r => !isNaN(r.pv) && !isNaN(r.bid) && r.bid <= 100);
-
-      if (csvData.length < 3) { showError('Need at least 3 valid data rows.'); return; }
-
-      fileStatus.style.display = 'block';
-      fileStatus.textContent = `✓  ${file.name}  ·  ${csvData.length} rows loaded`;
-      checkReady();
-    } catch(err) {
-      showError('Failed to parse Excel file: ' + err.message);
-    }
-  };
-  reader.readAsArrayBuffer(file);
-}
-
 function checkReady() {
-  runBtn.disabled = !(csvData.length > 0 && selectedOption !== null);
+  runBtn.disabled = !(selectedOption !== null && dataStore[selectedOption]);
 }
 
 runBtn.addEventListener('click', runAnalysis);
@@ -589,6 +636,8 @@ function getOptionInfo(opt) {
 function runAnalysis() {
   const opt = selectedOption;
   const info = getOptionInfo(opt);
+  const csvData = dataStore[opt] || [];
+  if (!csvData.length) { showError('No data loaded for this option.'); return; }
   let data = csvData;
   if (opt === 1) {
     data = csvData.filter(r => Math.abs(r.bid - r.pv / 2) >= 0.99);
