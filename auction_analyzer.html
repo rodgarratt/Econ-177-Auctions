@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auction Theory Analyzer</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f2eb;
+    --surface: #fefcf7;
+    --ink: #1a1814;
+    --ink-2: #5a5650;
+    --ink-3: #9a9690;
+    --accent: #2d5a3d;
+    --accent-light: #e8f0eb;
+    --amber: #c4790a;
+    --amber-light: #fdf4e3;
+    --border: #e0dbd0;
+    --border-strong: #c8c2b4;
+    --radius: 4px;
+    --radius-lg: 8px;
+  }
+
+  body {
+    font-family: 'Fraunces', Georgia, serif;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 2rem 1rem 4rem;
+  }
+
+  .layout {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  header {
+    grid-column: 1 / -1;
+    border-bottom: 1px solid var(--border-strong);
+    padding-bottom: 1.25rem;
+    margin-bottom: 0.5rem;
+  }
+
+  header h1 {
+    font-size: 2rem;
+    font-weight: 300;
+    font-style: italic;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    line-height: 1.1;
+  }
+
+  header p {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--ink-3);
+    margin-top: 0.4rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .sidebar {
+    position: sticky;
+    top: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+  }
+
+  .panel-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: 1rem;
+  }
+
+  .drop-zone {
+    border: 1.5px dashed var(--border-strong);
+    border-radius: var(--radius);
+    padding: 1.5rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    background: var(--bg);
+  }
+
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--accent);
+    background: var(--accent-light);
+  }
+
+  .drop-zone input { display: none; }
+
+  .drop-icon {
+    width: 32px;
+    height: 32px;
+    margin: 0 auto 0.75rem;
+    color: var(--ink-3);
+  }
+
+  .drop-label {
+    font-size: 0.85rem;
+    color: var(--ink-2);
+    font-style: italic;
+    line-height: 1.4;
+  }
+
+  .drop-label strong { font-weight: 600; font-style: normal; color: var(--ink); }
+
+  .file-status {
+    margin-top: 0.75rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    display: none;
+  }
+
+  .options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .option-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    padding: 0.6rem 0.75rem;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background 0.15s;
+    border: 1px solid transparent;
+  }
+
+  .option-item:hover { background: var(--bg); }
+  .option-item.selected {
+    background: var(--accent-light);
+    border-color: var(--accent);
+  }
+
+  .option-item input[type="radio"] { display: none; }
+
+  .radio-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border-strong);
+    flex-shrink: 0;
+    margin-top: 2px;
+    transition: border-color 0.15s, background 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .option-item.selected .radio-dot {
+    border-color: var(--accent);
+    background: var(--accent);
+  }
+
+  .radio-dot::after {
+    content: '';
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: white;
+    display: none;
+  }
+
+  .option-item.selected .radio-dot::after { display: block; }
+
+  .option-text {
+    font-size: 0.82rem;
+    line-height: 1.4;
+    color: var(--ink-2);
+  }
+
+  .option-text strong {
+    display: block;
+    font-weight: 600;
+    font-style: normal;
+    color: var(--ink);
+    font-size: 0.83rem;
+  }
+
+  .option-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 2px 5px;
+    border-radius: 3px;
+    display: inline-block;
+    margin-bottom: 2px;
+  }
+
+  .tag-second { background: #e8f0eb; color: #2d5a3d; }
+  .tag-first  { background: #fdf4e3; color: #c4790a; }
+
+  .run-btn {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s, opacity 0.2s;
+  }
+
+  .run-btn:hover { background: #1e3e2a; }
+  .run-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .main-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .result-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+  }
+
+  .result-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .result-title {
+    font-size: 1.1rem;
+    font-weight: 300;
+    font-style: italic;
+  }
+
+  .result-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-3);
+    letter-spacing: 0.05em;
+  }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .stat-cell {
+    background: var(--bg);
+    border-radius: var(--radius);
+    padding: 0.75rem;
+  }
+
+  .stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: 0.3rem;
+  }
+
+  .stat-value {
+    font-size: 1.1rem;
+    font-weight: 300;
+    font-style: italic;
+    color: var(--ink);
+  }
+
+  .chart-wrap {
+    position: relative;
+    width: 100%;
+    height: 440px;
+  }
+
+  .legend-row {
+    display: flex;
+    gap: 1.25rem;
+    margin-top: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 12px;
+    color: var(--ink-2);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .legend-swatch {
+    width: 28px;
+    height: 3px;
+    border-radius: 2px;
+  }
+
+  .legend-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+  }
+
+  .equation-box {
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    background: var(--bg);
+    border-radius: var(--radius);
+    border-left: 3px solid var(--accent);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--ink-2);
+    line-height: 1.7;
+  }
+
+  .option-item.coming-soon {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .option-item.coming-soon:hover { background: transparent; }
+    text-align: center;
+    padding: 4rem 2rem;
+    color: var(--ink-3);
+  }
+
+  .empty-state .big-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+    opacity: 0.4;
+  }
+
+  .empty-state p {
+    font-style: italic;
+    font-size: 1rem;
+    font-weight: 300;
+    line-height: 1.6;
+  }
+
+  .error-msg {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: #991b1b;
+    display: none;
+  }
+
+  @media (max-width: 768px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { position: static; }
+    header { grid-column: 1; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <header>
+    <h1>Auction Theory Analyzer</h1>
+    <p>Equilibrium bidding analysis &amp; regression — experimental economics</p>
+  </header>
+
+  <aside class="sidebar">
+    <div class="panel">
+      <div class="panel-title">01 — Upload Data</div>
+      <div class="drop-zone" id="dropZone">
+        <input type="file" id="fileInput" accept=".xls,.xlsx">
+        <svg class="drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+        </svg>
+        <div class="drop-label">
+          <strong>Drop Excel file here</strong><br>
+          or click to browse<br>
+          <span style="font-size:0.75rem;color:var(--ink-3);">.xls or .xlsx · Needs: Private Value, Bid Amount</span>
+        </div>
+        <div class="file-status" id="fileStatus"></div>
+      </div>
+      <div class="error-msg" id="errorMsg"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">02 — Analysis Type</div>
+      <div class="options-list" id="optionsList">
+      </div>
+    </div>
+
+    <button class="run-btn" id="runBtn" disabled>Run Analysis</button>
+  </aside>
+
+  <main class="main-panel">
+    <div class="result-card" id="resultCard">
+      <div class="empty-state">
+        <div class="big-icon">◎</div>
+        <p>Upload a CSV file and select an analysis type<br>to plot equilibrium bids and regression lines.</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const OPTIONS = [
+  { id: 1, label: 'Second-price, 2-bidder',           tag: 'second', desc: 'SPSB · 2 players' },
+  { id: 2, label: 'Second-price, 5-bidder',           tag: 'second', desc: 'SPSB · 5 players' },
+  { id: 3, label: 'Second-price, 2-bidder, $50 reserve', tag: 'second', desc: 'SPSB · 2 players · r=$50' },
+  { id: 4, label: 'Second-price, 2-bidder, $25 entry fee', tag: 'second', desc: 'SPSB · 2 players · fee=$25' },
+  { id: 5, label: 'First-price, 2-bidder',            tag: 'first',  desc: 'FPSB · 2 players' },
+  { id: 6, label: 'First-price, 5-bidder',            tag: 'first',  desc: 'FPSB · 5 players' },
+  { id: 7, label: 'First-price, 2-bidder, $50 reserve', tag: 'first',  desc: 'FPSB · 2 players · r=$50' },
+  { id: 8, label: 'First-price, 2-bidder, $25 entry fee', tag: 'first',  desc: 'FPSB · 2 players · fee=$25' },
+];
+
+let csvData = [];
+let selectedOption = null;
+let activeChart = null;
+
+const optionsList = document.getElementById('optionsList');
+OPTIONS.forEach(opt => {
+  const item = document.createElement('label');
+  const isLive = opt.id <= 4;
+  item.className = 'option-item' + (isLive ? '' : ' coming-soon');
+  item.innerHTML = `
+    <input type="radio" name="analysis" value="${opt.id}" ${isLive ? '' : 'disabled'}>
+    <div class="radio-dot"></div>
+    <div class="option-text">
+      <span class="option-tag tag-${opt.tag}">${opt.tag}-price</span>
+      <strong>${opt.label.replace(/^(Second|First)-price,\s*/i,'')}</strong>
+      <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--ink-3);">${opt.desc}</span>
+      ${!isLive ? '<span style="font-family:\'DM Mono\',monospace;font-size:9px;letter-spacing:0.06em;text-transform:uppercase;color:#9a9690;background:#f0ede6;padding:2px 6px;border-radius:3px;margin-top:3px;display:inline-block;">Coming soon</span>' : ''}
+    </div>`;
+  if (isLive) {
+    item.addEventListener('click', () => {
+      selectedOption = opt.id;
+      document.querySelectorAll('.option-item').forEach(el => el.classList.remove('selected'));
+      item.classList.add('selected');
+      checkReady();
+    });
+  }
+  optionsList.appendChild(item);
+});
+
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('fileInput');
+const fileStatus = document.getElementById('fileStatus');
+const errorMsg = document.getElementById('errorMsg');
+const runBtn = document.getElementById('runBtn');
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  if (e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', () => { if (fileInput.files[0]) processFile(fileInput.files[0]); });
+
+function showError(msg) {
+  errorMsg.style.display = 'block';
+  errorMsg.textContent = msg;
+}
+function hideError() { errorMsg.style.display = 'none'; }
+
+function processFile(file) {
+  hideError();
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+
+      if (!rows.length) { showError('Spreadsheet appears empty.'); return; }
+      const headers = Object.keys(rows[0]).map(h => h.trim().toLowerCase());
+
+      const pvCol = headers.find(h => h.includes('private') || h === 'pv' || h === 'value' || h === 'private_value' || h === 'privatevalue');
+      const bidCol = headers.find(h => h.includes('bid') || h === 'bid_amount' || h === 'bidamount');
+
+      if (!pvCol || !bidCol) {
+        showError(`Could not find required columns. Expected "Private Value" and "Bid Amount". Found: ${Object.keys(rows[0]).join(', ')}`);
+        return;
+      }
+
+      const origHeaders = Object.keys(rows[0]);
+      const pvColOrig = origHeaders.find(h => h.trim().toLowerCase() === pvCol);
+      const bidColOrig = origHeaders.find(h => h.trim().toLowerCase() === bidCol);
+
+      csvData = rows
+        .map(r => ({ pv: parseFloat(r[pvColOrig]), bid: parseFloat(r[bidColOrig]) }))
+        .filter(r => !isNaN(r.pv) && !isNaN(r.bid) && r.bid <= 100);
+
+      if (csvData.length < 3) { showError('Need at least 3 valid data rows.'); return; }
+
+      fileStatus.style.display = 'block';
+      fileStatus.textContent = `✓  ${file.name}  ·  ${csvData.length} rows loaded`;
+      checkReady();
+    } catch(err) {
+      showError('Failed to parse Excel file: ' + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function checkReady() {
+  runBtn.disabled = !(csvData.length > 0 && selectedOption !== null);
+}
+
+runBtn.addEventListener('click', runAnalysis);
+
+function linReg(xs, ys) {
+  const n = xs.length;
+  const mx = xs.reduce((a,b) => a+b,0)/n;
+  const my = ys.reduce((a,b) => a+b,0)/n;
+  const ssxy = xs.reduce((a,x,i) => a+(x-mx)*(ys[i]-my),0);
+  const ssxx = xs.reduce((a,x) => a+(x-mx)**2,0);
+  const slope = ssxy/ssxx;
+  const intercept = my - slope*mx;
+  const yHat = xs.map(x => intercept + slope*x);
+  const ssTot = ys.reduce((a,y) => a+(y-my)**2,0);
+  const ssRes = ys.reduce((a,y,i) => a+(y-yHat[i])**2,0);
+  const r2 = 1 - ssRes/ssTot;
+  const s2 = ssRes / (n - 2);
+  const seSlope = Math.sqrt(s2 / ssxx);
+  const seIntercept = Math.sqrt(s2 * (1/n + mx*mx/ssxx));
+  return { slope, intercept, r2, seSlope, seIntercept };
+}
+
+function getEquilibriumBid(opt, pv) {
+  switch(opt) {
+    case 1: return pv;
+    case 2: return pv;
+    case 3: return pv < 50 ? 0 : pv;
+    case 4: return pv < 50 ? 0 : pv;
+    case 5: return pv / 2;
+    case 6: return pv * (4/5);
+    case 7: return pv < 50 ? 0 : (pv + 50) / 2;
+    case 8: return pv / 2;
+    default: return pv;
+  }
+}
+
+function getOptionInfo(opt) {
+  const map = {
+    1: { title: 'Second-price, 2-bidder', eqLabel: 'Eq. bid: β(v) = v  (45° line)' },
+    2: { title: 'Second-price, 5-bidder', eqLabel: 'Eq. bid: β(v) = v  (45° line)' },
+    3: { title: 'Second-price, 2-bidder, $50 reserve', eqLabel: 'Eq. bid: 0 if v<$50, else v' },
+    4: { title: 'Second-price, 2-bidder, $25 entry fee', eqLabel: 'Eq. bid: 0 if v<$50, else v' },
+    5: { title: 'First-price, 2-bidder', eqLabel: 'Eq. bid: β(v) = v/2' },
+    6: { title: 'First-price, 5-bidder', eqLabel: 'Eq. bid: β(v) = (4/5)v' },
+    7: { title: 'First-price, 2-bidder, $50 reserve', eqLabel: 'Eq. bid: 0 if v<$50, else (v+50)/2' },
+    8: { title: 'First-price, 2-bidder, $25 entry fee', eqLabel: 'Eq. bid: β(v) = v/2' },
+  };
+  return map[opt];
+}
+
+function runAnalysis() {
+  const opt = selectedOption;
+  const info = getOptionInfo(opt);
+  let data = csvData;
+  if (opt === 1) {
+    data = csvData.filter(r => Math.abs(r.bid - r.pv / 2) >= 0.99);
+  } else if (opt === 2) {
+    data = csvData.filter(r => Math.abs(r.bid - r.pv * 4 / 5) >= 0.99 && r.bid !== 0);
+  }
+  const xs = data.map(r => r.pv);
+  const ys = data.map(r => r.bid);
+  const reg = linReg(xs, ys);
+
+  const pvMin = Math.min(...xs);
+  const pvMax = Math.max(...xs);
+  const bidMin = Math.min(...ys);
+  const bidMax = Math.max(...ys);
+  const axisMax = Math.max(pvMax, bidMax) * 1.08;
+  const axisMin = Math.min(0, pvMin, bidMin);
+
+  const DISCONTINUOUS_OPTS = [3, 4, 7];
+  const eqPoints = [];
+  for (let v = axisMin; v <= axisMax * 1.02; v += (axisMax - axisMin) / 200) {
+    if (DISCONTINUOUS_OPTS.includes(opt) && v < 50) {
+      continue;
+    } else {
+      eqPoints.push({ x: v, y: getEquilibriumBid(opt, v) });
+    }
+  }
+
+  const regPoints = [
+    { x: axisMin, y: reg.intercept + reg.slope * axisMin },
+    { x: axisMax, y: reg.intercept + reg.slope * axisMax }
+  ];
+
+  const interceptSign = reg.intercept >= 0 ? '+' : '−';
+  const interceptAbs = Math.abs(reg.intercept).toFixed(4);
+  const eqStr = info.eqLabel;
+  const regStr = `Bid = ${reg.slope.toFixed(4)}·v ${interceptSign} ${Math.abs(reg.intercept).toFixed(4)}   (R² = ${reg.r2.toFixed(3)})`;
+
+  const avgPV = (xs.reduce((a,b)=>a+b,0)/xs.length).toFixed(2);
+  const avgBid = (ys.reduce((a,b)=>a+b,0)/ys.length).toFixed(2);
+  const n = xs.length;
+
+  const tSlope = (reg.slope - 1) / reg.seSlope;
+  const tIntercept = reg.intercept / reg.seIntercept;
+  const slopeRejected = Math.abs(tSlope) > 1.96;
+  const interceptRejected = Math.abs(tIntercept) > 1.96;
+  const slopeVerdict = slopeRejected
+    ? '<span style="color:#b91c1c;font-weight:500;">H₀ rejected</span>'
+    : '<span style="color:#166534;font-weight:500;">H₀ accepted</span>';
+  const interceptVerdict = interceptRejected
+    ? '<span style="color:#b91c1c;font-weight:500;">H₀ rejected</span>'
+    : '<span style="color:#166534;font-weight:500;">H₀ accepted</span>';
+
+  if (activeChart) { activeChart.destroy(); activeChart = null; }
+
+  const resultCard = document.getElementById('resultCard');
+  resultCard.innerHTML = `
+    <div class="result-header">
+      <div class="result-title">${info.title}</div>
+      <div class="result-meta">Option ${opt} · n = ${n} observations</div>
+    </div>
+    <div class="stats-row">
+      <div class="stat-cell">
+        <div class="stat-label">Avg Private Value</div>
+        <div class="stat-value">$${parseFloat(avgPV).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-label">Avg Bid Amount</div>
+        <div class="stat-value">$${parseFloat(avgBid).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-label">Slope (SE) [t]</div>
+        <div class="stat-value">${reg.slope.toFixed(4)}</div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--ink-3);">(${reg.seSlope.toFixed(4)}) [${((reg.slope-1)/reg.seSlope).toFixed(3)}]</div>
+      </div>
+      <div class="stat-cell">
+        <div class="stat-label">Intercept (SE) [t]</div>
+        <div class="stat-value">${interceptSign === '+' ? '' : '−'}${interceptAbs}</div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--ink-3);">(${reg.seIntercept.toFixed(4)}) [${(reg.intercept/reg.seIntercept).toFixed(3)}]</div>
+      </div>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="mainChart"></canvas>
+    </div>
+    <div class="legend-row">
+      <div class="legend-item"><div class="legend-dot" style="background:#2d5a3d;"></div>Observed bids</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#c4790a;"></div>Equilibrium bid line</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#4a7ab5;"></div>Regression line</div>
+    </div>
+    <div class="equation-box">
+      <div style="color:var(--amber);font-size:11px;">— Equilibrium: <span style="color:var(--ink-2);">${eqStr}</span></div>
+      <div style="color:#4a7ab5;font-size:11px;margin-top:0.3rem;">— Regression: ${regStr}</div>
+      <div style="color:var(--ink-3);font-size:11px;margin-top:0.3rem;">&nbsp;&nbsp;&nbsp;Std. errors: slope = ${reg.seSlope.toFixed(4)}, intercept = ${reg.seIntercept.toFixed(4)}</div>
+      <div style="color:var(--ink-3);font-size:11px;margin-top:0.2rem;">&nbsp;&nbsp;&nbsp;t-stats: slope (H₀: β=1) = ${tSlope.toFixed(3)} → ${slopeVerdict} &nbsp;|&nbsp; intercept (H₀: α=0) = ${tIntercept.toFixed(3)} → ${interceptVerdict}</div>
+    </div>
+  `;
+
+  const ctx = document.getElementById('mainChart').getContext('2d');
+  activeChart = new Chart(ctx, {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'Observed bids',
+          data: data.map(r => ({ x: r.pv, y: r.bid })),
+          backgroundColor: 'rgba(45,90,61,0.45)',
+          borderColor: 'rgba(45,90,61,0.7)',
+          borderWidth: 1,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          type: 'scatter',
+          order: 3,
+        },
+        {
+          label: 'Equilibrium bid',
+          data: eqPoints,
+          borderColor: '#c4790a',
+          backgroundColor: 'transparent',
+          borderWidth: 2.5,
+          pointRadius: 0,
+          type: 'line',
+          order: 1,
+          tension: 0,
+          spanGaps: false,
+        },
+        {
+          label: 'Regression line',
+          data: regPoints,
+          borderColor: '#4a7ab5',
+          backgroundColor: 'transparent',
+          borderWidth: 2,
+          pointRadius: 0,
+          type: 'line',
+          order: 2,
+          borderDash: [6, 4],
+          tension: 0,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 400 },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              if (ctx.datasetIndex === 0) return `  PV: $${ctx.parsed.x.toFixed(2)} · Bid: $${ctx.parsed.y.toFixed(2)}`;
+              return null;
+            }
+          },
+          filter: item => item.datasetIndex === 0,
+        }
+      },
+      scales: {
+        x: {
+          type: 'linear',
+          title: {
+            display: true,
+            text: 'Private Value ($)',
+            font: { family: "'DM Mono', monospace", size: 11 },
+            color: '#9a9690',
+          },
+          min: axisMin,
+          max: axisMax,
+          grid: { color: 'rgba(0,0,0,0.06)' },
+          ticks: {
+            font: { family: "'DM Mono', monospace", size: 10 },
+            color: '#9a9690',
+            callback: v => '$' + v.toFixed(0)
+          }
+        },
+        y: {
+          type: 'linear',
+          title: {
+            display: true,
+            text: 'Bid Amount ($)',
+            font: { family: "'DM Mono', monospace", size: 11 },
+            color: '#9a9690',
+          },
+          min: axisMin,
+          max: axisMax,
+          grid: { color: 'rgba(0,0,0,0.06)' },
+          ticks: {
+            font: { family: "'DM Mono', monospace", size: 10 },
+            color: '#9a9690',
+            callback: v => '$' + v.toFixed(0)
+          }
+        }
+      }
+    }
+  });
+}
+</script>
+</body>
+</html>
