@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Auction Theory Analyzer</title>
+<title>Auction Bid Analyzer</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -424,7 +424,7 @@
 
 <div class="layout">
   <header>
-    <h1>Auction Theory Analyzer</h1>
+    <h1>Auction Bid Analyzer</h1>
     <p>Equilibrium bidding analysis &amp; regression — experimental economics</p>
   </header>
 
@@ -470,7 +470,7 @@ let dataStore = {}; // keyed by option id
 let selectedOption = null;
 let activeChart = null;
 
-const LIVE_OPTIONS = [1, 2, 3, 4];
+const LIVE_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8];
 
 const uploadSlots = document.getElementById('uploadSlots');
 const errorMsg = document.getElementById('errorMsg');
@@ -559,7 +559,7 @@ function processFile(file, optId) {
 const optionsList = document.getElementById('optionsList');
 OPTIONS.forEach(opt => {
   const item = document.createElement('label');
-  const isLive = opt.id <= 4;
+  const isLive = true;
   item.className = 'option-item' + (isLive ? '' : ' coming-soon');
   item.innerHTML = `
     <input type="radio" name="analysis" value="${opt.id}" ${isLive ? '' : 'disabled'}>
@@ -613,8 +613,8 @@ function getEquilibriumBid(opt, pv) {
     case 4: return pv < 50 ? 0 : pv;
     case 5: return pv / 2;
     case 6: return pv * (4/5);
-    case 7: return pv < 50 ? 0 : (pv + 50) / 2;
-    case 8: return pv / 2;
+    case 7: return pv < 50 ? 0 : 0.5 * pv + 1250 / pv;
+    case 8: return pv < 50 ? 0 : 0.5 * pv - 1250 / pv;
     default: return pv;
   }
 }
@@ -627,8 +627,8 @@ function getOptionInfo(opt) {
     4: { title: 'Second-price, 2-bidder, $25 entry fee', eqLabel: 'Eq. bid: 0 if v<$50, else v' },
     5: { title: 'First-price, 2-bidder', eqLabel: 'Eq. bid: β(v) = v/2' },
     6: { title: 'First-price, 5-bidder', eqLabel: 'Eq. bid: β(v) = (4/5)v' },
-    7: { title: 'First-price, 2-bidder, $50 reserve', eqLabel: 'Eq. bid: 0 if v<$50, else (v+50)/2' },
-    8: { title: 'First-price, 2-bidder, $25 entry fee', eqLabel: 'Eq. bid: β(v) = v/2' },
+    7: { title: 'First-price, 2-bidder, $50 reserve', eqLabel: 'Eq. bid: 0 if v<$50, else 0.5v + 1250/v' },
+    8: { title: 'First-price, 2-bidder, $25 entry fee', eqLabel: 'Eq. bid: 0 if v<$50, else 0.5v − 1250/v' },
   };
   return map[opt];
 }
@@ -655,7 +655,7 @@ function runAnalysis() {
   const axisMax = Math.max(pvMax, bidMax) * 1.08;
   const axisMin = Math.min(0, pvMin, bidMin);
 
-  const DISCONTINUOUS_OPTS = [3, 4, 7];
+  const DISCONTINUOUS_OPTS = [3, 4, 7, 8];
   const eqPoints = [];
   for (let v = axisMin; v <= axisMax * 1.02; v += (axisMax - axisMin) / 200) {
     if (DISCONTINUOUS_OPTS.includes(opt) && v < 50) {
