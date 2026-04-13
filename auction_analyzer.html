@@ -727,13 +727,13 @@ function runAnalysis() {
     <div class="legend-row">
       <div class="legend-item"><div class="legend-dot" style="background:#2d5a3d;"></div>Observed bids</div>
       <div class="legend-item"><div class="legend-swatch" style="background:#c4790a;"></div>Equilibrium bid line</div>
-      <div class="legend-item"><div class="legend-swatch" style="background:#4a7ab5;"></div>Regression line</div>
+      ${opt <= 6 ? '<div class="legend-item"><div class="legend-swatch" style="background:#4a7ab5;"></div>Regression line</div>' : ''}
     </div>
     <div class="equation-box">
       <div style="color:var(--amber);font-size:11px;">— Equilibrium: <span style="color:var(--ink-2);">${eqStr}</span></div>
-      <div style="color:#4a7ab5;font-size:11px;margin-top:0.3rem;">— Regression: ${regStr}</div>
+      ${opt <= 6 ? `<div style="color:#4a7ab5;font-size:11px;margin-top:0.3rem;">— Regression: ${regStr}</div>
       <div style="color:var(--ink-3);font-size:11px;margin-top:0.3rem;">&nbsp;&nbsp;&nbsp;Std. errors: slope = ${reg.seSlope.toFixed(4)}, intercept = ${reg.seIntercept.toFixed(4)}</div>
-      <div style="color:var(--ink-3);font-size:11px;margin-top:0.2rem;">&nbsp;&nbsp;&nbsp;t-stats: slope (H₀: β=1) = ${tSlope.toFixed(3)} → ${slopeVerdict} &nbsp;|&nbsp; intercept (H₀: α=0) = ${tIntercept.toFixed(3)} → ${interceptVerdict}</div>
+      <div style="color:var(--ink-3);font-size:11px;margin-top:0.2rem;">&nbsp;&nbsp;&nbsp;t-stats: slope (H₀: β=1) = ${tSlope.toFixed(3)} → ${slopeVerdict} &nbsp;|&nbsp; intercept (H₀: α=0) = ${tIntercept.toFixed(3)} → ${interceptVerdict}</div>` : ''}
     </div>
   `;
 
@@ -765,7 +765,7 @@ function runAnalysis() {
           tension: 0,
           spanGaps: false,
         },
-        {
+        ...(opt <= 6 ? [{
           label: 'Regression line',
           data: regPoints,
           borderColor: '#4a7ab5',
@@ -776,7 +776,7 @@ function runAnalysis() {
           order: 2,
           borderDash: [6, 4],
           tension: 0,
-        }
+        }] : [])
       ]
     },
     options: {
