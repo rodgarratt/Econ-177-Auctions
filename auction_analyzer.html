@@ -644,6 +644,9 @@ function runAnalysis() {
   } else if (opt === 2) {
     data = csvData.filter(r => Math.abs(r.bid - r.pv * 4 / 5) >= 0.99 && r.bid !== 0);
   }
+  if (opt >= 4) {
+    data = data.filter(r => r.bid < r.pv);
+  }
   const xs = data.map(r => r.pv);
   const ys = data.map(r => r.bid);
   const reg = linReg(xs, ys);
