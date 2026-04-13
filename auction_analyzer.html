@@ -682,7 +682,8 @@ function runAnalysis() {
   const avgBid = (ys.reduce((a,b)=>a+b,0)/ys.length).toFixed(2);
   const n = xs.length;
 
-  const tSlope = (reg.slope - 1) / reg.seSlope;
+  const slopeNull = opt === 5 ? 0.5 : opt === 6 ? 0.8 : 1;
+  const tSlope = (reg.slope - slopeNull) / reg.seSlope;
   const tIntercept = reg.intercept / reg.seIntercept;
   const slopeRejected = Math.abs(tSlope) > 1.96;
   const interceptRejected = Math.abs(tIntercept) > 1.96;
@@ -713,7 +714,7 @@ function runAnalysis() {
       <div class="stat-cell">
         <div class="stat-label">Slope (SE) [t]</div>
         <div class="stat-value">${reg.slope.toFixed(4)}</div>
-        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--ink-3);">(${reg.seSlope.toFixed(4)}) [${((reg.slope-1)/reg.seSlope).toFixed(3)}]</div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--ink-3);">(${reg.seSlope.toFixed(4)}) [${((reg.slope-slopeNull)/reg.seSlope).toFixed(3)}]</div>
       </div>
       <div class="stat-cell">
         <div class="stat-label">Intercept (SE) [t]</div>
@@ -733,7 +734,7 @@ function runAnalysis() {
       <div style="color:var(--amber);font-size:11px;">— Equilibrium: <span style="color:var(--ink-2);">${eqStr}</span></div>
       ${opt <= 6 ? `<div style="color:#4a7ab5;font-size:11px;margin-top:0.3rem;">— Regression: ${regStr}</div>
       <div style="color:var(--ink-3);font-size:11px;margin-top:0.3rem;">&nbsp;&nbsp;&nbsp;Std. errors: slope = ${reg.seSlope.toFixed(4)}, intercept = ${reg.seIntercept.toFixed(4)}</div>
-      <div style="color:var(--ink-3);font-size:11px;margin-top:0.2rem;">&nbsp;&nbsp;&nbsp;t-stats: slope (H₀: β=1) = ${tSlope.toFixed(3)} → ${slopeVerdict} &nbsp;|&nbsp; intercept (H₀: α=0) = ${tIntercept.toFixed(3)} → ${interceptVerdict}</div>` : ''}
+      <div style="color:var(--ink-3);font-size:11px;margin-top:0.2rem;">&nbsp;&nbsp;&nbsp;t-stats: slope (H₀: β=${slopeNull}) = ${tSlope.toFixed(3)} → ${slopeVerdict} &nbsp;|&nbsp; intercept (H₀: α=0) = ${tIntercept.toFixed(3)} → ${interceptVerdict}</div>` : ''}
     </div>
   `;
 
