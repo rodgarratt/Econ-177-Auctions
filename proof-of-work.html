@@ -100,85 +100,6 @@
       color: #e0eaff;
     }
 
-    .round-badge {
-      text-align: center;
-    }
-
-    .round-number {
-      font-size: 28px;
-      font-weight: 900;
-      color: #f0c040;
-    }
-
-    /* Chain display */
-    .chain-card {
-      background: #0a0f1a;
-      border: 1px solid #1a2a40;
-      border-radius: 16px;
-      padding: 20px 24px;
-      display: none;
-    }
-
-    .chain-card .section-label {
-      margin-bottom: 14px;
-    }
-
-    .chain-list {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .chain-block {
-      display: flex;
-      align-items: flex-start;
-      gap: 12px;
-      padding: 12px 16px;
-      background: #070c18;
-      border-radius: 10px;
-      border: 1px solid #1a3a20;
-      position: relative;
-    }
-
-    .chain-block-num {
-      font-size: 9px;
-      letter-spacing: 2px;
-      color: #00cc7a;
-      text-transform: uppercase;
-      min-width: 56px;
-      padding-top: 2px;
-    }
-
-    .chain-block-info {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .chain-block-zeros {
-      font-size: 9px;
-      letter-spacing: 2px;
-      color: #3a7050;
-      text-transform: uppercase;
-      margin-bottom: 4px;
-    }
-
-    .chain-block-hash {
-      font-size: 11px;
-      word-break: break-all;
-      color: #5a7aaf;
-      line-height: 1.5;
-    }
-
-    .chain-block-hash .hz { color: #00ff9f; font-weight: 700; }
-
-    .chain-connector {
-      text-align: center;
-      font-size: 10px;
-      color: #1e3a30;
-      letter-spacing: 1px;
-      padding: 2px 0;
-    }
-
     /* Input card */
     .input-card {
       background: #0d1220;
@@ -200,44 +121,6 @@
     }
 
     .field-label.nonce-label { color: #00ff9f; }
-    .field-label .hint {
-      color: #3a5a40;
-      font-size: 9px;
-      letter-spacing: 1px;
-    }
-
-    .prev-hash-field {
-      background: #07080f;
-      border: 1px solid #1e2a40;
-      border-radius: 12px;
-      padding: 16px 20px;
-      margin-bottom: 4px;
-      position: relative;
-    }
-
-    .prev-hash-field::before {
-      content: '🔒 FIXED';
-      position: absolute;
-      top: -9px;
-      right: 14px;
-      font-size: 9px;
-      letter-spacing: 2px;
-      background: #0d1220;
-      padding: 0 8px;
-      color: #4a6a9f;
-      border: 1px solid #1e2a40;
-      border-radius: 4px;
-    }
-
-    .prev-hash-value {
-      font-size: 11px;
-      word-break: break-all;
-      letter-spacing: 1px;
-      color: #5a7aaf;
-      line-height: 1.7;
-      margin-top: 6px;
-      font-family: 'Courier New', monospace;
-    }
 
     input[type="text"] {
       width: 100%;
@@ -254,269 +137,276 @@
 
     input[type="text"]:focus { border-color: #4a9eff; }
 
-    #nonce {
-      color: #00ff9f;
-      background: #07110f;
-      border-color: #1a4030;
-    }
-
+    #nonce { color: #00ff9f; border-color: #1a3a20; }
     #nonce:focus { border-color: #00ff9f; }
 
     .nonce-row {
       display: flex;
       gap: 10px;
+      align-items: stretch;
     }
 
     .nonce-row input { flex: 1; }
 
-    .btn-random {
-      background: transparent;
-      border: 1px solid #1a4030;
+    button {
+      background: none;
+      border: 1px solid #1a2840;
       border-radius: 8px;
-      padding: 0 16px;
-      color: #00cc7a;
-      font-size: 11px;
+      color: #4a9eff;
       font-family: 'Courier New', monospace;
+      font-size: 11px;
+      letter-spacing: 2px;
+      padding: 10px 14px;
       cursor: pointer;
-      letter-spacing: 1px;
+      text-transform: uppercase;
+      transition: all 0.2s;
       white-space: nowrap;
-      transition: border-color 0.2s, color 0.2s;
     }
 
-    .btn-random:hover { border-color: #00ff9f; color: #00ff9f; }
+    button:hover { background: #0d1a2e; border-color: #4a9eff; }
 
-    .btn-hash {
-      background: linear-gradient(135deg, #1a3a6e, #0d2a5e);
-      border: 1px solid #4a9eff;
+    #hashBtn {
+      background: linear-gradient(135deg, #0d3a6e, #0a2a50);
+      border: 1px solid #2a6ab0;
       border-radius: 10px;
-      padding: 16px;
-      color: #4a9eff;
-      font-size: 12px;
-      font-weight: 700;
+      color: #e0eaff;
       font-family: 'Courier New', monospace;
-      letter-spacing: 4px;
-      text-transform: uppercase;
+      font-size: 13px;
+      letter-spacing: 3px;
+      padding: 16px;
       cursor: pointer;
+      text-transform: uppercase;
       transition: all 0.2s;
       width: 100%;
     }
 
-    .btn-hash:hover:not(:disabled) {
-      background: linear-gradient(135deg, #1e4a8e, #102e6e);
-      box-shadow: 0 0 20px #4a9eff33;
+    #hashBtn:hover:not(:disabled) {
+      background: linear-gradient(135deg, #1a4a8e, #0d3a6e);
+      box-shadow: 0 0 20px rgba(74,158,255,0.2);
     }
 
-    .btn-hash:disabled { opacity: 0.4; cursor: not-allowed; }
+    #hashBtn:disabled { opacity: 0.4; cursor: not-allowed; }
 
     /* Output card */
     .output-card {
-      background: #0d1220;
-      border: 1px solid #cc3344;
-      border-radius: 16px;
-      padding: 28px;
-      display: none;
-    }
-
-    .output-card.success {
-      background: linear-gradient(135deg, #071a0f, #0a2015);
-      border-color: #00ff9f;
-    }
-
-    .output-card.shake {
-      animation: shake 0.5s ease-in-out;
-    }
-
-    .output-card.glow {
-      animation: glow-pulse 1s ease-in-out;
-    }
-
-    @keyframes shake {
-      0%,100%{transform:translateX(0)}
-      20%{transform:translateX(-8px)}
-      40%{transform:translateX(8px)}
-      60%{transform:translateX(-5px)}
-      80%{transform:translateX(5px)}
-    }
-
-    @keyframes glow-pulse {
-      0%{box-shadow:0 0 0 0 #00ff9f44}
-      50%{box-shadow:0 0 30px 10px #00ff9f22}
-      100%{box-shadow:0 0 0 0 #00ff9f00}
-    }
-
-    @keyframes slide-in {
-      from { opacity: 0; transform: translateY(-12px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    .output-status {
-      font-size: 10px;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-      color: #cc4455;
-      margin-bottom: 12px;
-    }
-
-    .output-card.success .output-status { color: #00ff9f; }
-
-    .hash-display {
-      font-size: 12px;
-      word-break: break-all;
-      line-height: 1.8;
-      letter-spacing: 1px;
-      padding: 16px;
-      background: #060a12;
-      border-radius: 8px;
-      border: 1px solid #0f1a2e;
-    }
-
-    .hash-zeros { color: #00ff9f; font-weight: 800; text-shadow: 0 0 12px #00ff9f88; }
-    .hash-rest  { color: #aab; }
-
-    .output-meta {
-      display: flex;
-      gap: 24px;
-      margin-top: 16px;
-      flex-wrap: wrap;
-    }
-
-    .meta-label {
-      font-size: 9px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: #506080;
-    }
-
-    .meta-zeros {
-      font-size: 24px;
-      font-weight: 900;
-      color: #cc4455;
-    }
-
-    .meta-zeros.good { color: #00ff9f; }
-    .meta-zeros span { font-size: 12px; color: #506080; }
-
-    .meta-input {
-      font-size: 11px;
-      color: #8090b0;
-      margin-top: 4px;
-      word-break: break-all;
-    }
-
-    .success-msg {
-      margin-top: 20px;
-      padding: 16px;
-      background: #071a0f;
-      border-radius: 10px;
-      border: 1px solid #1a5030;
-      font-size: 13px;
-      line-height: 1.7;
-      color: #80c090;
-      display: none;
-    }
-
-    .success-msg strong { color: #00ff9f; }
-    .success-msg code {
-      background: #0a2010;
-      padding: 2px 6px;
-      border-radius: 4px;
-      color: #00ff9f;
-    }
-
-    /* Level-up banner */
-    .levelup-banner {
-      display: none;
-      background: linear-gradient(135deg, #1a2e10, #0e2318);
-      border: 1px solid #00ff9f;
-      border-radius: 14px;
-      padding: 20px 24px;
-      text-align: center;
-      animation: slide-in 0.4s ease;
-    }
-
-    .levelup-banner .levelup-title {
-      font-size: 11px;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-      color: #00ff9f;
-      margin-bottom: 6px;
-    }
-
-    .levelup-banner .levelup-text {
-      font-size: 15px;
-      color: #c0e8c8;
-      line-height: 1.6;
-    }
-
-    .levelup-banner .levelup-text strong { color: #00ff9f; }
-
-    /* History */
-    .history-card {
-      background: #0d1220;
+      background: #0a0f1a;
       border: 1px solid #1a2840;
       border-radius: 16px;
       padding: 24px;
       display: none;
     }
 
+    .output-card.success {
+      border-color: #00aa66;
+      background: #070f0a;
+    }
+
+    @keyframes glow-pulse {
+      0%   { box-shadow: 0 0 0px rgba(0,255,159,0); }
+      50%  { box-shadow: 0 0 30px rgba(0,255,159,0.35); }
+      100% { box-shadow: 0 0 0px rgba(0,255,159,0); }
+    }
+
+    .output-card.glow { animation: glow-pulse 1.1s ease; }
+
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20%     { transform: translateX(-6px); }
+      40%     { transform: translateX(6px); }
+      60%     { transform: translateX(-4px); }
+      80%     { transform: translateX(4px); }
+    }
+
+    .output-card.shake { animation: shake 0.5s ease; }
+
     .section-label {
       font-size: 10px;
       letter-spacing: 3px;
       text-transform: uppercase;
       color: #4a9eff;
+      margin-bottom: 14px;
+    }
+
+    .output-status {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 14px;
+      color: #c8d0e0;
+    }
+
+    .output-status.ok  { color: #00ff9f; }
+    .output-status.bad { color: #ff4a6a; }
+
+    .hash-display {
+      font-size: 13px;
+      word-break: break-all;
+      letter-spacing: 1px;
+      line-height: 1.7;
+      margin-bottom: 14px;
+      padding: 14px;
+      background: #070c18;
+      border-radius: 8px;
+      border: 1px solid #1a2840;
+    }
+
+    .hash-zeros { color: #00ff9f; font-weight: 700; }
+    .hash-rest  { color: #3a4a6f; }
+
+    .meta-row {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .meta-zeros {
+      font-size: 20px;
+      font-weight: 900;
+      color: #ff4a6a;
+    }
+
+    .meta-zeros.good { color: #00ff9f; }
+    .meta-zeros span { font-size: 12px; color: #4a5a80; font-weight: 400; }
+
+    .input-string {
+      font-size: 10px;
+      color: #3a4a6f;
+      word-break: break-all;
+      line-height: 1.6;
+      margin-top: 6px;
+    }
+
+    /* Success overlay */
+    #successOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      text-align: center;
+      padding: 40px;
+      animation: fade-in 0.4s ease;
+    }
+
+    #successOverlay.show { display: flex; }
+
+    @keyframes fade-in {
+      from { opacity: 0; transform: scale(0.95); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+
+    .success-box {
+      background: linear-gradient(135deg, #070f0a, #0a1510);
+      border: 1px solid #00aa66;
+      border-radius: 24px;
+      padding: 48px 40px;
+      max-width: 520px;
+      width: 100%;
+      box-shadow: 0 0 60px rgba(0,255,159,0.2);
+    }
+
+    .success-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+
+    .success-box h2 {
+      font-size: 32px;
+      font-weight: 900;
+      background: linear-gradient(135deg, #00ff9f, #4a9eff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
       margin-bottom: 16px;
     }
 
-    .history-list {
+    .success-box p {
+      color: #6070a0;
+      font-size: 14px;
+      line-height: 1.7;
+      margin-bottom: 12px;
+    }
+
+    .success-hash {
+      font-size: 11px;
+      word-break: break-all;
+      letter-spacing: 1px;
+      padding: 14px;
+      background: #070c18;
+      border-radius: 8px;
+      border: 1px solid #1a3a20;
+      line-height: 1.7;
+      margin: 16px 0;
+    }
+
+    .success-stats {
       display: flex;
-      flex-direction: column;
-      gap: 8px;
+      justify-content: center;
+      gap: 32px;
+      margin: 20px 0;
+    }
+
+    .stat { text-align: center; }
+    .stat-val { font-size: 28px; font-weight: 900; color: #00ff9f; }
+    .stat-lbl { font-size: 10px; letter-spacing: 2px; color: #3a5a40; text-transform: uppercase; margin-top: 2px; }
+
+    #playAgainBtn {
+      margin-top: 24px;
+      background: linear-gradient(135deg, #0d3a6e, #0a2a50);
+      border: 1px solid #2a6ab0;
+      border-radius: 10px;
+      color: #e0eaff;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      letter-spacing: 3px;
+      padding: 14px 32px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.2s;
+    }
+
+    #playAgainBtn:hover {
+      background: linear-gradient(135deg, #1a4a8e, #0d3a6e);
+      box-shadow: 0 0 20px rgba(74,158,255,0.2);
+    }
+
+    /* History */
+    .history-card {
+      background: #0a0f1a;
+      border: 1px solid #1a2840;
+      border-radius: 16px;
+      padding: 20px 24px;
+      display: none;
     }
 
     .history-item {
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 10px 14px;
-      background: #070c18;
-      border-radius: 8px;
-      border: 1px solid #1a1a2e;
-      font-size: 11px;
+      padding: 8px 0;
+      border-bottom: 1px solid #0f1828;
+      font-size: 12px;
     }
 
-    .history-item.won { border-color: #1a4030; }
+    .history-item:last-child { border-bottom: none; }
 
-    .history-icon { width: 14px; }
-    .history-icon.ok { color: #00ff9f; }
-    .history-icon.fail { color: #cc4455; }
+    .history-icon { font-size: 14px; min-width: 18px; }
+    .history-icon.ok   { color: #00ff9f; }
+    .history-icon.fail { color: #ff4a6a; }
 
-    .history-nonce { color: #506080; min-width: 80px; }
-    .history-nonce span { color: #00cc7a; }
-
-    .history-hash {
-      color: #303858;
-      flex: 1;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-
-    .history-zeros { min-width: 50px; text-align: right; color: #506080; }
+    .history-nonce { color: #4a9eff; min-width: 120px; }
+    .history-nonce span { color: #c8d0e0; }
+    .history-hash  { color: #2a3a5f; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
+    .history-zeros { color: #ff4a6a; min-width: 48px; text-align: right; font-weight: 700; }
     .history-zeros.good { color: #00ff9f; }
 
-    /* Explainer */
-    .explainer {
-      background: #0a0f1a;
-      border: 1px solid #141e30;
-      border-radius: 16px;
-      padding: 24px;
-      font-size: 13px;
-      line-height: 1.8;
-      color: #5a6880;
+    @keyframes slide-in {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
-
-    .explainer p + p { margin-top: 10px; }
-    .explainer strong { color: #7a90b0; }
   </style>
 </head>
 <body>
@@ -524,7 +414,7 @@
   <div class="header">
     <div class="subtitle">Blockchain Fundamentals Lab</div>
     <h1>Proof of Work Challenge</h1>
-    <p id="headerDesc">Mine a block by finding a nonce that produces <strong id="headerZeros"> leading zeros</strong>.</p>
+    <p>Mine a block by finding a nonce that produces <strong id="headerZeros">4 leading zeros</strong>.</p>
   </div>
 
   <div class="container">
@@ -534,186 +424,133 @@
       <div>
         <div class="label">Target Pattern</div>
         <div class="target-pattern" id="targetPattern">
-          <span class="zeros">000</span><span class="rest">xxxxx...</span>
+          <span class="zeros">0000</span><span class="rest">xxxxx...</span>
         </div>
       </div>
-      <div class="round-badge">
-        <div class="label">Round</div>
-        <div class="round-number" id="roundDisplay">1</div>
-      </div>
-      <div style="text-align:right">
+      <div style="text-align:center">
         <div class="label">Attempts</div>
-        <div class="attempts-count" id="attempts">0</div>
+        <div class="attempts-count" id="attemptsEl">0</div>
       </div>
-    </div>
-
-    <!-- Solved chain display -->
-    <div class="chain-card" id="chainCard">
-      <div class="section-label">⛓ Global Block Chain — solved by all visitors</div>
-      <div class="chain-list" id="chainList"></div>
+      <div style="text-align:center">
+        <div class="label">Difficulty</div>
+        <div class="attempts-count" id="diffDisplay" style="color:#00ff9f">4</div>
+      </div>
     </div>
 
     <!-- Input card -->
     <div class="input-card">
       <div>
-        <label class="field-label" style="color:#4a6a9f">Previous Block Hash</label>
-        <div class="prev-hash-field">
-          <div class="prev-hash-value" id="prevHashDisplay">000a7f2c8b1d9e4f7a6c5b8d2e1f0a9c3b7d6e5f4a2c1b8e9d0f3a7c6b5d4e2f</div>
-        </div>
-      </div>
-      <div>
         <label class="field-label" for="name">Your Name</label>
-        <input type="text" id="name" placeholder="e.g. Alice" />
+        <input type="text" id="name" placeholder="e.g. Satoshi" autocomplete="off" />
       </div>
       <div>
-        <label class="field-label" for="transaction">Transaction Data</label>
-        <input type="text" id="transaction" placeholder="e.g. Alice pays Bob 5 BTC" />
+        <label class="field-label" for="tx">Transaction Data</label>
+        <input type="text" id="tx" placeholder="e.g. Alice pays Bob 5 BTC" autocomplete="off" />
       </div>
       <div>
         <label class="field-label nonce-label" for="nonce">
-          Nonce <span class="hint">— this is what you change to find a valid hash</span>
+          Nonce &nbsp;<span class="hint">← change this to find a valid hash</span>
         </label>
         <div class="nonce-row">
-          <input type="text" id="nonce" placeholder="Try: 42, abc, hello123..." />
-          <button class="btn-random" id="randomBtn">⚄ Random</button>
+          <input type="text" id="nonce" placeholder="Try any value..." autocomplete="off" />
+          <button id="randomBtn">⚄ Random</button>
         </div>
       </div>
-      <button class="btn-hash" id="hashBtn" disabled>⬡ &nbsp; Compute SHA-256 Hash</button>
+      <button id="hashBtn" disabled>⬡ &nbsp;Compute SHA-256 Hash</button>
     </div>
 
     <!-- Output card -->
     <div class="output-card" id="outputCard">
+      <div class="section-label">Hash Output</div>
       <div class="output-status" id="outputStatus"></div>
       <div class="hash-display" id="hashDisplay"></div>
-      <div class="output-meta">
-        <div>
-          <div class="meta-label">Leading Zeros</div>
-          <div class="meta-zeros" id="zerosCount">0 <span>/ 3 needed</span></div>
-        </div>
-        <div>
-          <div class="meta-label">Input String</div>
-          <div class="meta-input" id="inputString"></div>
-        </div>
+      <div class="meta-row">
+        <div class="meta-zeros" id="zerosCount"></div>
       </div>
-      <div class="success-msg" id="successMsg"></div>
+      <div class="input-string" id="inputString"></div>
     </div>
 
-    <!-- Level-up banner -->
-    <div class="levelup-banner" id="levelupBanner">
-      <div class="levelup-title">🔗 Block Added to Chain!</div>
-      <div class="levelup-text" id="levelupText"></div>
-    </div>
-
-    <!-- History -->
+    <!-- History card -->
     <div class="history-card" id="historyCard">
       <div class="section-label">Recent Attempts</div>
-      <div class="history-list" id="historyList"></div>
-    </div>
-
-    <!-- Explainer -->
-    <div class="explainer">
-      <div class="section-label">How Proof of Work Functions</div>
-      <p>SHA-256 is a <strong>one-way function</strong> — you cannot reverse-engineer what input produces a specific output. The only way to find a hash with leading zeros is trial and error.</p>
-      <p>Bitcoin miners do this <strong>trillions of times per second</strong>, competing to find a nonce that satisfies the current difficulty target. The winner gets to add the next block and earn the block reward.</p>
+      <div id="historyList"></div>
     </div>
 
   </div>
 
+  <!-- Success overlay -->
+  <div id="successOverlay">
+    <div class="success-box">
+      <div class="success-icon">⛏️</div>
+      <h2>Block Mined!</h2>
+      <p>Your nonce produced a valid hash with enough leading zeros.</p>
+      <div class="success-hash" id="successHash"></div>
+      <div class="success-stats">
+        <div class="stat">
+          <div class="stat-val" id="statAttempts">0</div>
+          <div class="stat-lbl">Attempts</div>
+        </div>
+        <div class="stat">
+          <div class="stat-val" id="statZeros">0</div>
+          <div class="stat-lbl">Leading Zeros</div>
+        </div>
+        <div class="stat">
+          <div class="stat-val" id="statNonce">—</div>
+          <div class="stat-lbl">Winning Nonce</div>
+        </div>
+      </div>
+      <p id="successNote"></p>
+      <div style="margin-top:24px; padding:18px; background:#0a0f1a; border:1px solid #1e3a5f; border-radius:12px; color:#6070a0; font-size:13px; line-height:1.7;">
+        🎓 <strong style="color:#e0eaff;">Congratulations!</strong> You have successfully mined a block.<br>
+        Please email your solution to <strong style="color:#4a9eff;">Professor Garratt</strong>.
+      </div>
+      <button id="emailBtn" style="margin-top:16px; width:100%; background:linear-gradient(135deg,#1a3a1a,#0d2a1a); border:1px solid #00aa66; border-radius:10px; color:#00ff9f; font-family:'Courier New',monospace; font-size:13px; letter-spacing:2px; padding:14px 32px; cursor:pointer; text-transform:uppercase; transition:all 0.2s;">
+        📋 &nbsp;Copy Solution to Clipboard
+      </button>
+      <div id="copyConfirm" style="display:none; margin-top:12px; padding:14px 16px; background:#0a1510; border:1px solid #00aa66; border-radius:8px; color:#00ff9f; font-size:12px; line-height:1.9; text-align:left;">
+        ✓ <strong>Copied!</strong> Now:<br>
+        1. Open your email and create a new message<br>
+        2. To: <strong style="color:#4a9eff;">garratt@ucsb.edu</strong><br>
+        3. Subject: <strong style="color:#e0eaff;">Winning Block Hash</strong><br>
+        4. Paste (Ctrl+V / Cmd+V) into the body and send
+      </div>
+      <button id="playAgainBtn">⟳ &nbsp;Play Again</button>
+    </div>
+  </div>
+
   <script>
-    const nameEl         = document.getElementById('name');
-    const txEl           = document.getElementById('transaction');
-    const nonceEl        = document.getElementById('nonce');
-    const hashBtn        = document.getElementById('hashBtn');
-    const randomBtn      = document.getElementById('randomBtn');
-    const attemptsEl     = document.getElementById('attempts');
-    const outputCard     = document.getElementById('outputCard');
-    const outputStatus   = document.getElementById('outputStatus');
-    const hashDisplay    = document.getElementById('hashDisplay');
-    const inputString    = document.getElementById('inputString');
-    const successMsg     = document.getElementById('successMsg');
-    const historyCard    = document.getElementById('historyCard');
-    const historyList    = document.getElementById('historyList');
-    const prevHashDisplay= document.getElementById('prevHashDisplay');
-    const chainCard      = document.getElementById('chainCard');
-    const chainList      = document.getElementById('chainList');
-    const levelupBanner  = document.getElementById('levelupBanner');
-    const levelupText    = document.getElementById('levelupText');
-    const targetPattern  = document.getElementById('targetPattern');
-    const roundDisplay   = document.getElementById('roundDisplay');
-    const headerZeros    = document.getElementById('headerZeros');
-    const zerosCountEl   = document.getElementById('zerosCount');
+    // ── Config ────────────────────────────────────────────────────────────────
+    const TARGET_ZEROS = 4;
 
-    // ── Shared persistent state keys ──────────────────────────────────────
-    const STORAGE_KEY = 'pow-global-state';
+    // ── Elements ──────────────────────────────────────────────────────────────
+    const nameEl        = document.getElementById('name');
+    const txEl          = document.getElementById('tx');
+    const nonceEl       = document.getElementById('nonce');
+    const hashBtn       = document.getElementById('hashBtn');
+    const randomBtn     = document.getElementById('randomBtn');
+    const attemptsEl    = document.getElementById('attemptsEl');
+    const outputCard    = document.getElementById('outputCard');
+    const outputStatus  = document.getElementById('outputStatus');
+    const hashDisplay   = document.getElementById('hashDisplay');
+    const inputString   = document.getElementById('inputString');
+    const zerosCountEl  = document.getElementById('zerosCount');
+    const historyCard   = document.getElementById('historyCard');
+    const historyList   = document.getElementById('historyList');
+    const successOverlay= document.getElementById('successOverlay');
+    const successHash   = document.getElementById('successHash');
+    const statAttempts  = document.getElementById('statAttempts');
+    const statZeros     = document.getElementById('statZeros');
+    const statNonce     = document.getElementById('statNonce');
+    const successNote   = document.getElementById('successNote');
+    const playAgainBtn  = document.getElementById('playAgainBtn');
 
-    const DEFAULT_STATE = {
-      targetZeros: 4,
-      currentPrevHash: '000a7f2c8b1d9e4f7a6c5b8d2e1f0a9c3b7d6e5f4a2c1b8e9d0f3a7c6b5d4e2f',
-      solvedBlocks: [],   // { round, zeros, hash, nonce, solver }
-      totalSolves: 0,
-    };
+    // ── State ─────────────────────────────────────────────────────────────────
+    let attempts = 0;
+    let history  = [];
 
-    // Local-only state
-    let attempts     = 0;
-    let history      = [];
-    let globalState  = { ...DEFAULT_STATE };
-    let pollingTimer = null;
-
-    // ── Storage helpers ────────────────────────────────────────────────────
-    async function loadGlobalState() {
-      try {
-        const result = await window.storage.get(STORAGE_KEY, true); // shared=true
-        if (result && result.value) {
-          globalState = JSON.parse(result.value);
-        }
-      } catch (_) {
-        // Key doesn't exist yet — use defaults
-        globalState = { ...DEFAULT_STATE };
-      }
-    }
-
-    async function saveGlobalState() {
-      try {
-        await window.storage.set(STORAGE_KEY, JSON.stringify(globalState), true); // shared=true
-      } catch (e) {
-        console.error('Storage save failed:', e);
-      }
-    }
-
-    // ── Polling: refresh shared state every 5 seconds ─────────────────────
-    function startPolling() {
-      pollingTimer = setInterval(async () => {
-        const prevZeros = globalState.targetZeros;
-        const prevRound = globalState.solvedBlocks.length;
-        await loadGlobalState();
-        // If someone else solved a block while we were working, update UI
-        if (globalState.targetZeros !== prevZeros || globalState.solvedBlocks.length !== prevRound) {
-          applyGlobalStateToUI(true);
-        }
-      }, 5000);
-    }
-
-    // ── Apply loaded global state to all UI elements ───────────────────────
-    function applyGlobalStateToUI(fromPoll = false) {
-      prevHashDisplay.textContent = globalState.currentPrevHash;
-      updateTargetUI();
-      renderChain();
-
-      if (fromPoll) {
-        // Show a subtle notification that difficulty changed
-        const banner = document.getElementById('levelupBanner');
-        levelupText.innerHTML =
-          `Another miner solved the previous block! ` +
-          `Difficulty is now <strong>${globalState.targetZeros} leading zeros</strong>. ` +
-          `Current chain length: <strong>${globalState.solvedBlocks.length} blocks</strong>.`;
-        banner.style.display = 'block';
-        setTimeout(() => { banner.style.display = 'none'; }, 6000);
-      }
-    }
-
-    // ── Core crypto ────────────────────────────────────────────────────────
+    // ── Crypto ────────────────────────────────────────────────────────────────
     async function sha256(message) {
-      const buf = new TextEncoder().encode(message);
+      const buf     = new TextEncoder().encode(message);
       const hashBuf = await crypto.subtle.digest('SHA-256', buf);
       return Array.from(new Uint8Array(hashBuf))
         .map(b => b.toString(16).padStart(2, '0'))
@@ -726,50 +563,74 @@
       return n;
     }
 
-    // ── UI helpers ─────────────────────────────────────────────────────────
+    // ── UI helpers ────────────────────────────────────────────────────────────
     function checkEnabled() {
       hashBtn.disabled = !(nameEl.value.trim() && txEl.value.trim() && nonceEl.value.trim());
     }
 
-    function updateTargetUI() {
-      const z = '0'.repeat(globalState.targetZeros);
-      targetPattern.innerHTML = `<span class="zeros">${z}</span><span class="rest">xxxxx...</span>`;
-      headerZeros.textContent = `${globalState.targetZeros} leading zero${globalState.targetZeros !== 1 ? 's' : ''}`;
-      roundDisplay.textContent = globalState.solvedBlocks.length + 1;
-    }
-
-    function renderChain() {
-      const blocks = globalState.solvedBlocks;
-      if (blocks.length === 0) { chainCard.style.display = 'none'; return; }
-      chainCard.style.display = 'block';
-      chainList.innerHTML = blocks.map((b, i) => {
-        const zHtml = `<span class="hz">${b.hash.slice(0, b.zeros)}</span>${b.hash.slice(b.zeros)}`;
-        const connector = i < blocks.length - 1
-          ? `<div class="chain-connector">↓ links to ↓</div>` : '';
-        const solverBadge = b.solver
-          ? `<span style="color:#4a9eff;font-size:9px;margin-left:6px">by ${b.solver}</span>` : '';
-        return `
-          <div class="chain-block" style="animation: slide-in 0.35s ease">
-            <div class="chain-block-num">Block ${i + 1}</div>
-            <div class="chain-block-info">
-              <div class="chain-block-zeros">${b.zeros} leading zeros · nonce: ${b.nonce}${solverBadge}</div>
-              <div class="chain-block-hash">${zHtml}</div>
-            </div>
-          </div>${connector}
-        `;
-      }).join('');
-    }
-
-    // ── Event wiring ───────────────────────────────────────────────────────
     [nameEl, txEl, nonceEl].forEach(el => el.addEventListener('input', checkEnabled));
     nonceEl.addEventListener('keydown', e => { if (e.key === 'Enter' && !hashBtn.disabled) doHash(); });
+
     randomBtn.addEventListener('click', () => {
       nonceEl.value = Math.random().toString(36).slice(2, 10);
       checkEnabled();
     });
+
     hashBtn.addEventListener('click', doHash);
 
-    // ── Main hash function ─────────────────────────────────────────────────
+    const emailBtn = document.getElementById('emailBtn');
+
+    emailBtn.addEventListener('click', () => {
+      const name  = nameEl.value.trim();
+      const tx    = txEl.value.trim();
+      const nonce = statNonce.textContent;
+      const zeros = statZeros.textContent;
+      const att   = statAttempts.textContent;
+      const hash  = successHash.textContent;
+
+      const text =
+        `To: garratt@ucsb.edu\n` +
+        `Subject: Winning Block Hash\n\n` +
+        `Dear Professor Garratt,\n\n` +
+        `I have successfully mined a block in the Proof of Work Challenge.\n\n` +
+        `--- Solution Details ---\n` +
+        `Name:             ${name}\n` +
+        `Transaction Data: ${tx}\n` +
+        `Winning Nonce:    ${nonce}\n` +
+        `Leading Zeros:    ${zeros}\n` +
+        `Total Attempts:   ${att}\n` +
+        `Winning Hash:     ${hash}\n\n` +
+        `Input String:     ${name}|${tx}|${nonce}\n\n` +
+        `Best regards,\n${name}`;
+
+      navigator.clipboard.writeText(text).then(() => {
+        document.getElementById('copyConfirm').style.display = 'block';
+        document.getElementById('emailBtn').textContent = '✓  Copied!';
+      }).catch(() => {
+        // Fallback: select a textarea
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        document.getElementById('copyConfirm').style.display = 'block';
+        document.getElementById('emailBtn').textContent = '✓  Copied!';
+      });
+    });
+
+    playAgainBtn.addEventListener('click', () => {
+      successOverlay.classList.remove('show');
+      attempts = 0;
+      history  = [];
+      attemptsEl.textContent = '0';
+      nonceEl.value = '';
+      outputCard.style.display = 'none';
+      historyCard.style.display = 'none';
+      checkEnabled();
+    });
+
+    // ── Main ─────────────────────────────────────────────────────────────────
     async function doHash() {
       const name  = nameEl.value.trim();
       const tx    = txEl.value.trim();
@@ -778,89 +639,64 @@
 
       hashBtn.disabled = true;
       hashBtn.textContent = 'Hashing...';
-      levelupBanner.style.display = 'none';
 
-      // Always hash against the latest shared prev-hash
-      const input = `${globalState.currentPrevHash}|${name}|${tx}|${nonce}`;
+      const input = `${name}|${tx}|${nonce}`;
       const hash  = await sha256(input);
       const zeros = countLeadingZeros(hash);
-      const won   = zeros >= globalState.targetZeros;
+      const won   = zeros >= TARGET_ZEROS;
 
       attempts++;
       attemptsEl.textContent = attempts;
 
+      // Hash display
       const zerosPart = hash.slice(0, zeros);
       const restPart  = hash.slice(zeros);
       hashDisplay.innerHTML =
         `<span class="hash-zeros">${zerosPart}</span><span class="hash-rest">${restPart}</span>`;
 
-      outputStatus.textContent = won
-        ? '✓ Valid Hash Found!'
-        : '✗ Not Valid — Try a Different Nonce';
+      outputStatus.textContent = won ? '✓ Valid Hash Found!' : '✗ Not Valid — Try a Different Nonce';
+      outputStatus.className   = 'output-status ' + (won ? 'ok' : 'bad');
 
-      zerosCountEl.innerHTML = `${zeros} <span>/ ${globalState.targetZeros} needed</span>`;
-      zerosCountEl.className = 'meta-zeros' + (won ? ' good' : '');
+      zerosCountEl.innerHTML  = `${zeros} <span>/ ${TARGET_ZEROS} needed</span>`;
+      zerosCountEl.className  = 'meta-zeros' + (won ? ' good' : '');
 
-      inputString.textContent = input;
+      inputString.textContent = `Input: ${input}`;
+
+      outputCard.style.display = 'block';
 
       if (won) {
-        successMsg.innerHTML =
-          `🎉 <strong>Block Mined!</strong> Your nonce <code>${nonce}</code> produced a hash with ${zeros} leading zeros. ` +
-          `This result is now <strong>saved globally</strong> — everyone visiting this page will now need to find ` +
-          `<strong>${globalState.targetZeros + 1} leading zeros</strong>!`;
-        successMsg.style.display = 'block';
         outputCard.className = 'output-card success glow';
         setTimeout(() => outputCard.classList.remove('glow'), 1100);
 
-        // ── Update shared global state ──────────────────────────────────
-        // Re-fetch first to avoid overwriting a concurrent solve
-        await loadGlobalState();
+        // Populate overlay
+        successHash.innerHTML =
+          `<span class="hash-zeros">${zerosPart}</span><span class="hash-rest" style="color:#3a4a6f">${restPart}</span>`;
+        statAttempts.textContent = attempts;
+        statZeros.textContent    = zeros;
+        statNonce.textContent    = nonce;
+        successNote.textContent  =
+          `It took ${attempts} attempt${attempts !== 1 ? 's' : ''} to find a hash starting with ${zeros} zeros. ` +
+          `In real Bitcoin mining, the difficulty is far higher — but the principle is exactly the same!`;
 
-        // Only advance if nobody else already solved this round
-        if (zeros >= globalState.targetZeros) {
-          globalState.solvedBlocks.push({
-            round:  globalState.solvedBlocks.length + 1,
-            zeros,
-            hash,
-            nonce,
-            solver: name,
-          });
-          globalState.totalSolves++;
-          globalState.targetZeros++;
-          globalState.currentPrevHash = hash;
-          await saveGlobalState();
-        }
-        // ───────────────────────────────────────────────────────────────
-
-        levelupText.innerHTML =
-          `The winning hash is now the <strong>fixed previous block hash</strong> for the next round. ` +
-          `Global difficulty increased: all visitors must now find <strong>${globalState.targetZeros} leading zeros</strong>!`;
-        levelupBanner.style.display = 'block';
-
-        applyGlobalStateToUI(false);
-
-        nonceEl.value = '';
+        setTimeout(() => successOverlay.classList.add('show'), 600);
 
       } else {
-        successMsg.style.display = 'none';
         outputCard.className = 'output-card shake';
         setTimeout(() => outputCard.classList.remove('shake'), 600);
       }
 
-      outputCard.style.display = 'block';
-
-      // Local history
+      // Local history (last 5)
       history.unshift({ nonce, hash, zeros, won });
       if (history.length > 5) history.pop();
 
       if (history.length > 1) {
         historyCard.style.display = 'block';
         historyList.innerHTML = history.map(h => `
-          <div class="history-item ${h.won ? 'won' : ''}">
+          <div class="history-item">
             <span class="history-icon ${h.won ? 'ok' : 'fail'}">${h.won ? '✓' : '✗'}</span>
             <span class="history-nonce">nonce: <span>${h.nonce}</span></span>
             <span class="history-hash">${h.hash}</span>
-            <span class="history-zeros ${h.zeros >= globalState.targetZeros ? 'good' : ''}">${h.zeros} zeros</span>
+            <span class="history-zeros ${h.zeros >= TARGET_ZEROS ? 'good' : ''}">${h.zeros} zeros</span>
           </div>
         `).join('');
       }
@@ -868,19 +704,6 @@
       hashBtn.textContent = '⬡  Compute SHA-256 Hash';
       checkEnabled();
     }
-
-    // ── Boot ───────────────────────────────────────────────────────────────
-    (async () => {
-      // Show loading state
-      hashBtn.disabled = true;
-      targetPattern.innerHTML = `<span class="zeros" style="opacity:0.4">loading...</span>`;
-
-      await loadGlobalState();
-      applyGlobalStateToUI(false);
-      checkEnabled();
-      startPolling();
-    })();
   </script>
-
 </body>
 </html>
