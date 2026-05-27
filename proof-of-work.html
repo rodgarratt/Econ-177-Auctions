@@ -50,7 +50,7 @@
       margin-top: 14px;
       color: #6070a0;
       font-size: 14px;
-      max-width: 480px;
+      white-space: nowrap;
       line-height: 1.7;
     }
 
@@ -250,7 +250,7 @@
     }
 
     .hash-zeros { color: #00ff9f; font-weight: 700; }
-    .hash-rest  { color: #3a4a6f; }
+    .hash-rest  { color: #5b8dd9; }
 
     .meta-row {
       display: flex;
@@ -440,12 +440,16 @@
     <!-- Input card -->
     <div class="input-card">
       <div>
+        <label class="field-label" for="prevHash">Previous Block Hash <span style="color:#3a5a40;font-size:9px;letter-spacing:1px">(fixed)</span></label>
+        <input type="text" id="prevHash" value="0000a3f8c2d71b4e9f6a2c5b8d1e0f3a7c6b5d4e2f1a9c8b7d6e5f4a3c2b1d0" readonly style="color:#4a9eff;opacity:0.7;cursor:not-allowed;" />
+      </div>
+      <div>
         <label class="field-label" for="name">Your Name</label>
         <input type="text" id="name" placeholder="e.g. Satoshi" autocomplete="off" />
       </div>
       <div>
         <label class="field-label" for="tx">Transaction Data</label>
-        <input type="text" id="tx" placeholder="e.g. Alice pays Bob 5 BTC" autocomplete="off" />
+        <input type="text" id="tx" value="Alice sends 3.5 BTC to Bob" autocomplete="off" />
       </div>
       <div>
         <label class="field-label nonce-label" for="nonce">
@@ -600,7 +604,8 @@
         `Leading Zeros:    ${zeros}\n` +
         `Total Attempts:   ${att}\n` +
         `Winning Hash:     ${hash}\n\n` +
-        `Input String:     ${name}|${tx}|${nonce}\n\n` +
+        `Previous Hash:    ${document.getElementById('prevHash').value.trim()}\n` +
+        `Input String:     ${document.getElementById('prevHash').value.trim()}|${name}|${tx}|${nonce}\n\n` +
         `Best regards,\n${name}`;
 
       navigator.clipboard.writeText(text).then(() => {
@@ -640,7 +645,8 @@
       hashBtn.disabled = true;
       hashBtn.textContent = 'Hashing...';
 
-      const input = `${name}|${tx}|${nonce}`;
+      const prevHash = document.getElementById('prevHash').value.trim();
+      const input = `${prevHash}|${name}|${tx}|${nonce}`;
       const hash  = await sha256(input);
       const zeros = countLeadingZeros(hash);
       const won   = zeros >= TARGET_ZEROS;
